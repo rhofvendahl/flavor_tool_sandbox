@@ -3,11 +3,20 @@
 <head>
     <title>Flavor Tool</title>
 
+    <link rel='stylesheet' href='static/css/lib/selectivity-jquery.min.css' type='text/css'>
+    <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' type='text/css'>
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <link href='static/css/lib/vis-network.min.css' rel='stylesheet' type='text/css' />
     <link href='static/css/style.css' rel='stylesheet' type='text/css' />
     <!-- <link rel='shortcut icon' href='static/img/favicon.ico'> -->
 
+    <!-- <script type="text/javascript" src="static/js/lib/jquery.min.js"></script> -->
+    <script type="text/javascript" src="http://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type='text/javascript' src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js'></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script> -->
+    <!-- <script src="//code.jquery.com/jquery-3.2.1.min.js"></script> -->
     <script type='text/javascript' src='static/js/lib/vis-network.min.js'></script>
+    <script type='text/javascript' src='static/js/lib/selectivity-jquery.min.js'></script>
     <!-- <script type='text/javascript' src='static/js/descriptions.js'></script> -->
     <script type='text/javascript' src='static/js/SaladIngredient.js'></script>
     <script type='text/javascript' src='static/js/SaladManager.js'></script>
@@ -15,10 +24,18 @@
 </head>
 
 <body>
-    <div id='network'></div>
-    <!-- <div id='about'>about</div> -->
-    <!-- <div id='footer'> -->
-    <!-- <div id='title'><span id='visual'>visual</span><span id='parse'>Parse</span></div> -->
-    <!-- <input id='query' type='text' value='This is a dependency parse tree. Click, hover and type to explore!'> -->
-    <!-- </div> -->
-    </html>
+    <div class='container-fluid'>
+        <div id='main' class='row'>
+            <div id='controls' class='col-2 p-3 shadow'>
+                <div id='present'></div>
+                    <button id='save' type="button" class="btn btn-secondary mt-3 mr-2">Save</button>
+                    <button id='load' type="button" class="btn btn-secondary mt-3">Load</button><br>
+                <button id='generate' type="button" class="btn btn-success mt-3">Generate salad</button><br>
+                <button id='about' type="button" class="btn btn-primary mt-3">About</button>
+                <button id='stir-fry' type="button" class="btn btn-danger ml-3 mb-3">Stir-fry mode</button>
+            </div>
+            <div id='network' class='col'></div>
+        </div>
+    </div>
+</body>
+</html>

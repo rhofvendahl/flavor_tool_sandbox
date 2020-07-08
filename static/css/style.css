@@ -1,5 +1,6 @@
 html, body {
     margin: 0px;
+    height: 100%;
 }
 
 body {
@@ -9,46 +10,56 @@ body {
     /* margin: 0px; */
 }
 
-#footer {
-    position: fixed;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
+.container-fluid {
+    padding: 0px;
 }
 
-#query {
-    width: 700px;
-    font-size: 24px;
-    outline: 0;
-    position: relative;
-}
-
-#title {
-    font-size: 56px;
-}
-
-#visual {
-    color: pink;
-}
-
-#parse {
-    color: lightblue;
-}
-
-#network {
+#main {
     position: absolute;
     width: 100%;
     height: 100%;
+    margin: 0px;
 }
 
-svg {
+#controls {
     position: relative;
+    /* float: left; */
+    background-color: whitesmoke;
+    /* width: 300px; */
+    /* width: 25%; */
+    height: 100%;
+    padding: 0px;
 }
 
-#about {
-    position: fixed;
-    top: 10px;
-    right: 20px;
-    font-size: 56px;
-    color: lightgrey;
+.present {
+    /* position: absolute; */
+    /* height: 100%; */
+    /* top: 0px;
+    bottom: 0px; */
+}
+
+.selectivity-multiple-input-container {
+    /* position: absolute; */
+    /* margin: 10px; */
+    border: 1px solid black;
+    border-radius: 8px;
+    background-color: white;
+    /* height: 1000px; */
+    /* top: 0px;
+    height: 1000px;
+    bottom: 0px; */
+}
+
+#network {
+    /* float: right; */
+    /* width: calc(100% - 300px); */
+    /* width: 80%; */
+    height: 100%;
+    padding: 0px;
+}
+
+#stir-fry {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
 }

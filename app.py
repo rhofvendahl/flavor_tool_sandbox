@@ -20,10 +20,9 @@ def parse():
             col_name: row[col_name]
         for col_name in salad_flavor_data.columns.tolist()}
     for i, row in salad_flavor_data.iterrows()]
-    for name in salad_flavor_data[salad_flavor_data['veg'] == 'y']['name']:
-        print(name)
+    # for name in salad_flavor_data[salad_flavor_data['veg'] == 'y']['name']:
+    #     print(name)
     return jsonify(salad_ingredients)
 
 if __name__ == "__main__":
     app.run()
-    

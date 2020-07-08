@@ -1,4 +1,4 @@
-window.onload = function() {
+$(document).ready(function() {
     // parseTree = new ParseTree();
     //
     // var input = document.getElementById('query');
@@ -27,6 +27,12 @@ window.onload = function() {
     // setInterval(function() {
     //   if (timeOuts > 1) parseTree.process(input.value)
     // }, 100);
-    saladManager = new SaladManager();
+
+    var saladManager = new SaladManager();
     saladManager.load();
-}
+
+    // document.cookie = 'username=John Doe;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    // console.log('pre cookie', document.cookie, typeof(document.cookie));
+    // document.cookie = "username=John Doe";
+    // console.log('post cookie', document.cookie, typeof(document.cookie));
+});
