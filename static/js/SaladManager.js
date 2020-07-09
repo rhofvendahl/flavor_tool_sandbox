@@ -107,7 +107,7 @@ var SaladManager = function() {
             } else {
                 projectNamesSet = new Set([]);
             }
-            projectNamesSet.add(projectName);
+            projectNamesSet.add('salad_' + projectName);
             console.log(projectNamesSet)
             self.saveToLocalStorage('projectNames', Array.from(projectNamesSet));
             // localStorage.projectNames = JSON.stringify(Array.from(projectNamesSet));
@@ -276,6 +276,8 @@ var SaladManager = function() {
             console.log(self.getFromLocalStorage('projectNames'));
             console.log(localStorage)
             self.getFromLocalStorage('projectNames').forEach(function(name) {
+                name = name.split('salad_').slice(1).join('');
+                console.log('name');
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -302,6 +304,8 @@ var SaladManager = function() {
             projectNames = self.getFromLocalStorage('projectNames');
             message += 'Saved projects:\n';
             self.getFromLocalStorage('projectNames').forEach(function(name) {
+                name = name.split('salad_').slice(1).join('');
+                console.log(name);
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -312,7 +316,7 @@ var SaladManager = function() {
         }
 
         message += '\nPlease enter a project to load:';
-        var projectName = prompt(message);
+        var projectName = 'salad_' + prompt(message);
 
         if (projectName && projectName != '') {
             var projectNameSet = new Set(projectNames);
