@@ -3,11 +3,10 @@ var SaladManager = function() {
 
     self.nodes = new vis.DataSet();
     self.edges = new vis.DataSet();
-
     var container = document.getElementById('network');
     var data = {nodes: self.nodes, edges: self.edges};
     var options = {
-        autoResize: false,
+        height: window.innerHeight + 'px',
         nodes: {
             borderWidthSelected: 2
         },
