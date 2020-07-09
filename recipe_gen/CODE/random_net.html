@@ -1,0 +1,105 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "lightgreen", "id": "SPROUTS, PEA", "label": "SPROUTS, PEA", "shape": "dot"}, {"color": "lightgreen", "id": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "label": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "shape": "dot"}, {"color": "brown", "id": "CHIA SEEDS", "label": "CHIA SEEDS", "shape": "dot"}, {"color": "green", "id": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "label": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "shape": "dot"}, {"color": "orange", "id": "LEMONS, MEYER", "label": "LEMONS, MEYER", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, COCONUT", "label": "OIL, COCONUT", "shape": "dot"}, {"color": "lightgrey", "id": "VINEGAR, BALSAMIC", "label": "VINEGAR, BALSAMIC", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, SEA", "label": "SALT, SEA", "shape": "dot"}, {"color": "lightgrey", "id": "PEPPER, BLACK", "label": "PEPPER, BLACK", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "lightgrey", "from": "SPROUTS, PEA", "physics": false, "to": "LEMONS, MEYER"}, {"color": "lightgrey", "from": "SPROUTS, PEA", "physics": false, "to": "OIL, COCONUT"}, {"color": "lightgrey", "from": "SPROUTS, PEA", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "lightgrey", "from": "SPROUTS, PEA", "physics": false, "to": "PEPPER, BLACK"}, {"color": "lightgrey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)"}, {"color": "lightgrey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "LEMONS, MEYER"}, {"color": "lightgrey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "OIL, COCONUT"}, {"color": "lightgrey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "SALT, SEA"}, {"color": "lightgrey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "PEPPER, BLACK"}, {"color": "lightgrey", "from": "CHIA SEEDS", "physics": false, "to": "LEMONS, MEYER"}, {"color": "lightgrey", "from": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "physics": false, "to": "LEMONS, MEYER"}, {"color": "lightgrey", "from": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "physics": false, "to": "OIL, COCONUT"}, {"color": "lightgrey", "from": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "lightgrey", "from": "LEMONS, MEYER", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "lightgrey", "from": "LEMONS, MEYER", "physics": false, "to": "PEPPER, BLACK"}, {"color": "lightgrey", "from": "OIL, COCONUT", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "lightgrey", "from": "VINEGAR, BALSAMIC", "physics": false, "to": "SALT, SEA"}, {"color": "grey", "from": "LETTUCE, LAMB\u2019S (aka CORN SALAD or MCHE)", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "grey", "from": "KELP, KELP GRANULES, and KELP POWDER (see also ARAME, KOMBU, SEA VEGETABLES, and WAKAME)", "physics": false, "to": "PEPPER, BLACK"}, {"color": "grey", "from": "VINEGAR, BALSAMIC", "physics": false, "to": "PEPPER, BLACK"}, {"color": "darkgrey", "from": "OIL, COCONUT", "to": "PEPPER, BLACK"}, {"color": "darkgrey", "from": "SALT, SEA", "to": "PEPPER, BLACK"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>

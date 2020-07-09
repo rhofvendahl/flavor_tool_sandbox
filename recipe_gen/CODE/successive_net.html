@@ -1,0 +1,105 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "lightgreen", "id": "ARUGULA (aka ROCKET)", "label": "ARUGULA (aka ROCKET)", "shape": "dot"}, {"color": "lightgreen", "id": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "label": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "shape": "dot"}, {"color": "brown", "id": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "label": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "shape": "dot"}, {"color": "orange", "id": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "label": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "shape": "dot"}, {"color": "orange", "id": "BANANAS", "label": "BANANAS", "shape": "dot"}, {"color": "green", "id": "BEETS", "label": "BEETS", "shape": "dot"}, {"color": "green", "id": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "label": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "shape": "dot"}, {"color": "green", "id": "BROCCOLI", "label": "BROCCOLI", "shape": "dot"}, {"color": "green", "id": "BROCCOLI RABE (aka BROCCOLI RAAB or RAPINI)", "label": "BROCCOLI RABE (aka BROCCOLI RAAB or RAPINI)", "shape": "dot"}, {"color": "green", "id": "BROCCOLINI", "label": "BROCCOLINI", "shape": "dot"}, {"color": "green", "id": "CABBAGE, RED", "label": "CABBAGE, RED", "shape": "dot"}, {"color": "green", "id": "CARROTS", "label": "CARROTS", "shape": "dot"}, {"color": "brown", "id": "CASHEWS and CASHEW NUT BUTTER", "label": "CASHEWS and CASHEW NUT BUTTER", "shape": "dot"}, {"color": "green", "id": "CAULIFLOWER", "label": "CAULIFLOWER", "shape": "dot"}, {"color": "green", "id": "CELERY", "label": "CELERY", "shape": "dot"}, {"color": "green", "id": "CHIVES", "label": "CHIVES", "shape": "dot"}, {"color": "green", "id": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "label": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "shape": "dot"}, {"color": "orange", "id": "DATES", "label": "DATES", "shape": "dot"}, {"color": "brown", "id": "FLAXSEEDS", "label": "FLAXSEEDS", "shape": "dot"}, {"color": "green", "id": "GARLIC", "label": "GARLIC", "shape": "dot"}, {"color": "orange", "id": "GRAPEFRUIT", "label": "GRAPEFRUIT", "shape": "dot"}, {"color": "green", "id": "LEEKS", "label": "LEEKS", "shape": "dot"}, {"color": "orange", "id": "LEMONS", "label": "LEMONS", "shape": "dot"}, {"color": "orange", "id": "LIMES (e.g., JUICE, ZEST)", "label": "LIMES (e.g., JUICE, ZEST)", "shape": "dot"}, {"color": "orange", "id": "MANGOES", "label": "MANGOES", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, BUTTON (aka WHITE MUSHROOMS)", "label": "MUSHROOMS, BUTTON (aka WHITE MUSHROOMS)", "shape": "dot"}, {"color": "lightblue", "id": "NUTRITIONAL YEAST (aka affectionately as NOOCH)", "label": "NUTRITIONAL YEAST (aka affectionately as NOOCH)", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, OLIVE", "label": "OIL, OLIVE", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, SESAME", "label": "OIL, SESAME", "shape": "dot"}, {"color": "green", "id": "ONIONS, RED (see also ONIONS)", "label": "ONIONS, RED (see also ONIONS)", "shape": "dot"}, {"color": "green", "id": "ONIONS, VIDALIA", "label": "ONIONS, VIDALIA", "shape": "dot"}, {"color": "orange", "id": "ORANGES, ORANGE JUICE, and ORANGE ZEST", "label": "ORANGES, ORANGE JUICE, and ORANGE ZEST", "shape": "dot"}, {"color": "brown", "id": "PEANUTS and PEANUT BUTTER", "label": "PEANUTS and PEANUT BUTTER", "shape": "dot"}, {"color": "lightgrey", "id": "PEPPER, BLACK", "label": "PEPPER, BLACK", "shape": "dot"}, {"color": "green", "id": "RADISHES\u2014IN GENERAL (see also DAIKON)", "label": "RADISHES\u2014IN GENERAL (see also DAIKON)", "shape": "dot"}, {"color": "orange", "id": "RAISINS", "label": "RAISINS", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, KOSHER", "label": "SALT, KOSHER", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, SEA", "label": "SALT, SEA", "shape": "dot"}, {"color": "green", "id": "SCALLIONS (aka GREEN ONIONS or SPRING ONIONS)", "label": "SCALLIONS (aka GREEN ONIONS or SPRING ONIONS)", "shape": "dot"}, {"color": "green", "id": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "label": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "shape": "dot"}, {"color": "lightgrey", "id": "VINEGAR, APPLE CIDER (aka VINEGAR, CIDER)", "label": "VINEGAR, APPLE CIDER (aka VINEGAR, CIDER)", "shape": "dot"}, {"color": "lightgrey", "id": "VINEGAR, BALSAMIC", "label": "VINEGAR, BALSAMIC", "shape": "dot"}, {"color": "lightgrey", "id": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)", "label": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)", "shape": "dot"}, {"color": "lightgrey", "id": "VINEGAR, SHERRY", "label": "VINEGAR, SHERRY", "shape": "dot"}, {"color": "brown", "id": "WALNUTS", "label": "WALNUTS", "shape": "dot"}, {"color": "green", "id": "ZUCCHINI (see also SQUASH, SUMMER)", "label": "ZUCCHINI (see also SQUASH, SUMMER)", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "VINEGAR, APPLE CIDER (aka VINEGAR, CIDER)"}, {"color": "black", "from": "BEETS", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "BEETS", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "BEETS", "physics": false, "to": "CARROTS"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "RAISINS", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "MANGOES", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "ORANGES, ORANGE JUICE, and ORANGE ZEST"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "GARLIC", "physics": false, "to": "ZUCCHINI (see also SQUASH, SUMMER)"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)"}, {"color": "black", "from": "BEETS", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "GARLIC", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "BEETS", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "BROCCOLI RABE (aka BROCCOLI RAAB or RAPINI)", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "CASHEWS and CASHEW NUT BUTTER", "physics": false, "to": "ORANGES, ORANGE JUICE, and ORANGE ZEST"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "BEETS", "physics": false, "to": "CHIVES"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "CELERY"}, {"color": "black", "from": "PEANUTS and PEANUT BUTTER", "physics": false, "to": "VINEGAR, APPLE CIDER (aka VINEGAR, CIDER)"}, {"color": "black", "from": "LEMONS", "physics": false, "to": "RADISHES\u2014IN GENERAL (see also DAIKON)"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "BEETS"}, {"color": "black", "from": "ONIONS, RED (see also ONIONS)", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "DATES", "physics": false, "to": "ORANGES, ORANGE JUICE, and ORANGE ZEST"}, {"color": "black", "from": "ONIONS, RED (see also ONIONS)", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "ONIONS, RED (see also ONIONS)", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "GARLIC", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "ORANGES, ORANGE JUICE, and ORANGE ZEST", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "BEETS", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "LEMONS", "physics": false, "to": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)"}, {"color": "black", "from": "ARUGULA (aka ROCKET)", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "BEETS", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "BEETS", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "LEMONS", "physics": false, "to": "ZUCCHINI (see also SQUASH, SUMMER)"}, {"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "RAISINS"}, {"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "CELERY", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "RAISINS"}, {"color": "black", "from": "ARUGULA (aka ROCKET)", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "ORANGES, ORANGE JUICE, and ORANGE ZEST", "physics": false, "to": "RADISHES\u2014IN GENERAL (see also DAIKON)"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "DATES"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "BROCCOLI"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "DATES"}, {"color": "black", "from": "RADISHES\u2014IN GENERAL (see also DAIKON)", "physics": false, "to": "SALT, SEA"}, {"color": "black", "from": "BANANAS", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "BROCCOLI", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "LEMONS", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "PEANUTS and PEANUT BUTTER", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "BROCCOLI", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "BEETS", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "GARLIC", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "ALMONDS (and UNSWEETENED ALMOND BUTTER; see also MILK, ALMOND)", "physics": false, "to": "BANANAS"}, {"color": "black", "from": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "physics": false, "to": "VINEGAR, BALSAMIC"}, {"color": "black", "from": "CABBAGE, RED", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "BEETS", "physics": false, "to": "ORANGES, ORANGE JUICE, and ORANGE ZEST"}, {"color": "black", "from": "CHIVES", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "ORANGES, ORANGE JUICE, and ORANGE ZEST"}, {"color": "black", "from": "BANANAS", "physics": false, "to": "CASHEWS and CASHEW NUT BUTTER"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "BROCCOLI", "physics": false, "to": "GARLIC"}, {"color": "black", "from": "DATES", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "CELERY", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "ORANGES, ORANGE JUICE, and ORANGE ZEST", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "DATES", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "ZUCCHINI (see also SQUASH, SUMMER)"}, {"color": "black", "from": "LEEKS", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "APPLES (and APPLE CIDER, APPLE JUICE and/or APPLESAUCE)", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "GARLIC", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "LIMES (e.g., JUICE, ZEST)"}, {"color": "black", "from": "CAULIFLOWER", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "MANGOES"}, {"color": "black", "from": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "CARROTS", "physics": false, "to": "CELERY"}, {"color": "black", "from": "CELERY", "physics": false, "to": "WALNUTS"}, {"color": "black", "from": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "physics": false, "to": "ZUCCHINI (see also SQUASH, SUMMER)"}, {"color": "black", "from": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE", "physics": false, "to": "VINEGAR, RED WINE (see also VINEGAR, WINE\u2013IN GENERAL)"}, {"color": "black", "from": "LEEKS", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "LIMES (e.g., JUICE, ZEST)", "physics": false, "to": "MANGOES"}, {"color": "black", "from": "LETTUCE, BUTTER (aka BIBB or BOSTON LETTUCE)", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "BROCCOLI", "physics": false, "to": "ONIONS, RED (see also ONIONS)"}, {"color": "black", "from": "ONIONS, RED (see also ONIONS)", "physics": false, "to": "VINEGAR, SHERRY"}, {"color": "black", "from": "BELL PEPPERS\u2014IN GENERAL, or MIXED", "physics": false, "to": "OIL, OLIVE"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "TOMATOES, TOMATO JUICE, TOMATO PASTE, and TOMATO SAUCE"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>

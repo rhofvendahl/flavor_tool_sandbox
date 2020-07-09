@@ -63,6 +63,12 @@ var SaladManager = function() {
         return ingredients;
     }
     self.load = function() {
+        var aboutedJson = localStorage.abouted;
+        if (!aboutedJson || JSON.parse(aboutedJson) == false) {
+            console.log('Showing "About" to first time visitors!');
+            $('#about-window').show();
+            localStorage.abouted = JSON.stringify(true);
+        }
         fetch('/get_salad_ingredients', {
             method: 'get'
         }).then(function(response) {
