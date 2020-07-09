@@ -138,7 +138,7 @@ var SaladManager = function() {
     }
 
     self.load = function() {
-        self.saveToLocalStorage('projectNames', new Set(['salad_current']))
+        self.saveToLocalStorage('projectNames', ['salad_current'])
         // var aboutedJson = localStorage.salad_abouted;
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
             // console.log('backing shit the fuck up.')
@@ -273,6 +273,8 @@ var SaladManager = function() {
         var message = '';
         if (self.existsInLocalStorage('projectNames')) {
             message += 'Saved projects:\n';
+            console.log(self.getFromLocalStorage('projectNames'));
+            console.log(localStorage)
             self.getFromLocalStorage('projectNames').forEach(function(name) {
                 if (name != '') {
                     message += name + '\n';
