@@ -7,6 +7,7 @@ var SaladManager = function() {
     var container = document.getElementById('network');
     var data = {nodes: self.nodes, edges: self.edges};
     var options = {
+        autoResize: false,
         nodes: {
             borderWidthSelected: 2
         },
