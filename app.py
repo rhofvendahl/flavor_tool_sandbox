@@ -58,7 +58,7 @@ def generate_salad():
     n_gen_extras_min = max(2-len(locked_extras), 0)
     n_gen_extras_max = max(4-len(locked_extras), 0)
 
-    n_iterations = len(present_names)*1
+    n_iterations = len(present_names)*2
     top_score = 0
     for try_i in range(n_iterations):
         n_subgraphs = 2
