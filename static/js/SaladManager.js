@@ -116,7 +116,7 @@ var SaladManager = function() {
 
     self.loadProjectFromLocalStorage = function(projectName) {
         if (projectName != undefined) {
-            console.log('LOADING FROM LOCAL STORAGE');
+            console.log('LOADING FROM LOCAL STORAGE', projectName);
             // var dataJson = localStorage[projectName];
             if (self.existsInLocalStorage(projectName)) {
                 data = self.getFromLocalStorage(projectName);
@@ -316,11 +316,11 @@ var SaladManager = function() {
         }
 
         message += '\nPlease enter a project to load:';
-        var projectName = 'salad_' + prompt(message);
+        var projectName = prompt(message);
 
         if (projectName && projectName != '') {
             var projectNameSet = new Set(projectNames);
-            if (!projectNameSet.has(projectName)) {
+            if (!projectNameSet.has('salad_'+projectName)) {
                 alert('Project not found, please try again.')
             } else {
                 self.loadProjectFromLocalStorage(projectName);
