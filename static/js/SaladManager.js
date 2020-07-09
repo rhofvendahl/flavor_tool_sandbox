@@ -140,8 +140,19 @@ var SaladManager = function() {
     self.load = function() {
         // var aboutedJson = localStorage.salad_abouted;
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
-            console.log('backing shit the fuck up.')
-            self.saveToLocalStorage('current', JSON.parse(localStorage.current))
+            // console.log('backing shit the fuck up.')
+            // self.saveToLocalStorage('current', JSON.parse(localStorage.current))
+            self.saveToLocalStorage('projectNames', new Set(['salad_current']))
+            // var projectNamesSet;
+            // if (self.existsInLocalStorage('projectNames')) {
+            //     projectNamesSet = new Set(self.getFromLocalStorage('projectNames'));
+            // } else {
+            //     projectNamesSet = new Set([]);
+            // }
+            // projectNamesSet.add(projectName);
+            // console.log(projectNamesSet)
+            // self.saveToLocalStorage('projectNames', Array.from(projectNamesSet));
+
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
             self.saveToLocalStorage('abouted', true);
