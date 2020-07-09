@@ -63,8 +63,9 @@ var SaladManager = function() {
         return ingredients;
     }
     self.load = function() {
-        fetch('/get_salad_ingredients')
-        .then(function(response) {
+        fetch('/get_salad_ingredients', {
+            method: 'get'
+        }).then(function(response) {
             return response.json();
         }).then(function(ingredients) {
             self.ingredients = []
@@ -72,10 +73,6 @@ var SaladManager = function() {
                 var saladIngredient = new SaladIngredient(self, ingredient);
                 self.ingredients.push(saladIngredient);
                 self.presentSet.add(saladIngredient);
-            });
-        }).then(function() {
-            self.ingredients.forEach(function(ingredient) {
-                ingredient.render();
             });
         }).then(function() {
             $('#present').selectivity({
@@ -93,11 +90,20 @@ var SaladManager = function() {
                     ingredient.render();
                 } else if (event.removed && typeof(event.removed) == 'object') {
                     var ingredient = self.getFromName(event.removed.id);
-                    ingredient.present = false;
-                    self.presentSet.delete(ingredient);
+                    ingredient.clear();
                     ingredient.render();
                 }
             });
+        }).then(function() { // idk if this is set up right, the way render is an alternative to load
+            var cacheJson = localStorage[''];
+            if (cacheJson) {
+                console.log('CACHE FOUND');
+                self.loadFromLocalStorage('');
+            } else {
+                self.ingredients.forEach(function(ingredient) {
+                    ingredient.render();
+                });
+            }
         });
     };
 
@@ -123,6 +129,7 @@ var SaladManager = function() {
                         self.selectedSet.add(ingredient);
                     }
                     ingredient.render();
+                    self.saveToLocalStorage('');
                 }
                 self.clickTimeout = null;
             }, 250);
@@ -144,6 +151,7 @@ var SaladManager = function() {
                 self.lockedSet.add(ingredient)
             }
             ingredient.render()
+            self.saveToLocalStorage('');
         }
     });
 
@@ -163,17 +171,22 @@ var SaladManager = function() {
                 self.connectedSet.add(ingredient);
             }
             ingredient.render();
+            self.saveToLocalStorage('');
         }
     });
 
     self.saveToLocalStorage = function(projectName) {
-        if (projectName && projectName != '') {
+        if (projectName != undefined) {
+            console.log('SAVING TO LOCAL STORAGE');
             var data = {
                 presentArray: self.getNamesFromSet(self.presentSet),
                 selectedArray: self.getNamesFromSet(self.selectedSet),
                 lockedArray: self.getNamesFromSet(self.lockedSet),
                 connectedArray: self.getNamesFromSet(self.connectedSet)
             };
+            // console.log('PRESENT', data.presentArray);
+            // console.log('SELECTED', data.selectedArray);
+            // console.log('LOCKED', data.lockedArray);
             localStorage[projectName] = JSON.stringify(data);
 
             var projectNamesJson = localStorage.projectNames;
@@ -186,26 +199,27 @@ var SaladManager = function() {
             projectNamesSet.add(projectName);
             localStorage.projectNames = JSON.stringify(Array.from(projectNamesSet));
         }
+    }
 
-        self.loadFromLocalStorage = function(projectName) {
-            if (projectName && projectName != '') {
-                var dataJson = localStorage[projectName];
-                if (dataJson) {
-                    data = JSON.parse(dataJson);
-                    self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
-                    self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
-                    self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
-                    self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
-                    self.ingredients.forEach(function(ingredient) {
-                        ingredient.present = self.presentSet.has(ingredient);
-                        ingredient.selected = self.selectedSet.has(ingredient);
-                        ingredient.locked = self.lockedSet.has(ingredient);
-                        ingredient.connected = self.connectedSet.has(ingredient)
-                        ingredient.render();
-                    });
-                } else {
-                    console.log('no data found in localStorage')
-                }
+    self.loadFromLocalStorage = function(projectName) {
+        if (projectName != undefined) {
+            console.log('LOADING FROM LOCAL STORAGE');
+            var dataJson = localStorage[projectName];
+            if (dataJson) {
+                data = JSON.parse(dataJson);
+                self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
+                self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
+                self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
+                self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
+                self.ingredients.forEach(function(ingredient) {
+                    ingredient.present = self.presentSet.has(ingredient);
+                    ingredient.selected = self.selectedSet.has(ingredient);
+                    ingredient.locked = self.lockedSet.has(ingredient);
+                    ingredient.connected = self.connectedSet.has(ingredient)
+                    ingredient.render();
+                });
+            } else {
+                console.log('no data found in localStorage')
             }
         }
     }
@@ -216,7 +230,9 @@ var SaladManager = function() {
         if (projectNamesJson) {
             message += 'Saved projects:\n';
             JSON.parse(projectNamesJson).forEach(function(name) {
-                message += name + '\n';
+                if (name != '') {
+                    message += name + '\n';
+                }
             });
         } else {
             message += 'No saved projects.\n';
@@ -244,7 +260,9 @@ var SaladManager = function() {
         if (projectNamesJson) {
             message += 'Saved projects:\n';
             JSON.parse(projectNamesJson).forEach(function(name) {
-                message += name + '\n';
+                if (name != '') {
+                    message += name + '\n';
+                }
             });
         } else {
             message += 'No saved projects.\n';
@@ -259,11 +277,104 @@ var SaladManager = function() {
             } else {
                 self.loadFromLocalStorage(projectName);
                 console.log('LOADED');
+                self.saveToLocalStorage('');
             }
         }
     });
 
     $('#generate').click(function() {
 
+    });
+
+    // $('#about-window').hide();
+    $('#about').click(function() {
+        $('#about-window').show();
+    });
+    $('#about-close').click(function() {
+        $('#about-window').hide();
+    });
+
+    $('#all').click(function() {
+        var confirmation = prompt('Are you sure? (y/n)');
+        if (confirmation == 'y') {
+            self.ingredients.forEach(function(ingredient) {
+                ingredient.present = true;
+                ingredient.render();
+            });
+        }
+    });
+
+    $('#none').click(function() {
+        var confirmation = prompt('Are you sure? (y/n)');
+        if (confirmation == 'y') {
+            self.ingredients.forEach(function(ingredient) {
+                ingredient.clear();
+                ingredient.render();
+            });
+        }
+    });
+
+    self.generate = function() {
+        $('#generating').show();
+        fetch('/generate_salad', {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                present: self.getNamesFromSet(self.presentSet),
+                locked: self.getNamesFromSet(self.lockedSet)
+            })
+        }).then(function(response) {
+            // console.log('dealing with fetch response')
+            // console.log(response);
+            return response.json();
+        }).then(function(json) {
+            var presentNames = json['present_names'];
+            var selectedNames = json['selected_names'];
+            var lockedNames = json['locked_names'];
+            var generatedNames = json['generated_names'];
+
+            var presentNamesSet = new Set(presentNames);
+            var selectedNamesSet = new Set(selectedNames);
+            var lockedNamesSet = new Set(lockedNames);
+            var generatedNamesset = new Set(generatedNames);
+
+            self.ingredients.forEach(function(ingredient) {
+                if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
+                    ingredient.present = true;
+                    self.presentSet.add(ingredient);
+                } // no else clause, as I don't want to remove any ingredients added since the request was sent
+                ingredient.selected = selectedNamesSet.has(ingredient.name);
+                ingredient.locked = lockedNamesSet.has(ingredient.name);
+                // console.log('name', ingredient.name);
+                // console.log('present', ingredient.present);
+                // console.log('selected', ingredient.selected);
+                // console.log('locked', ingredient.locked);
+                // console.log('');
+                $('#generating').hide();
+            });
+            self.selectedSet = new Set(self.getIngredientsFromNames(selectedNames));
+            self.lockedSet = new Set(self.getIngredientsFromNames(lockedNames));
+
+            self.ingredients.forEach(function(ingredient) {
+                ingredient.render();
+            });
+
+            self.saveToLocalStorage('');
+        });
+    }
+
+    $('#generate').click(function() {
+        self.generate();
+    });
+
+    $('body').keydown(function(event){
+        // if (event.keyCode == 32 && document.activeElement.tagName != 'INPUT') {
+        if (event.keyCode == 32) {
+            $(document.activeElement).blur();
+            self.generate();
+        }
     });
 }

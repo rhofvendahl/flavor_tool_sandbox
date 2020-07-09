@@ -42,6 +42,7 @@ var SaladIngredient = function(saladManager, data) {
     }
 
     self.renderConnection = function(otherName, connectionType) {
+        // console.log('other name', otherName);
         var other = self.saladManager.getFromName(otherName);
         var edgeId;
         var fromId;
@@ -60,15 +61,24 @@ var SaladIngredient = function(saladManager, data) {
         var physics;
         if (connectionType == 'ud') {
             edgeColor = 'black';
+            physics = true;
         } else if (connectionType == 'uc') {
             edgeColor = 'lightgrey';
+            physics = true;
+        // } else if (connectionType == 'ld') {
+        //     edgeColor = 'lightgrey';
+        //     physics = false;
         } else if (connectionType == 'uClash') {
             edgeColor = 'red';
+            physics = true;
         } else if (connectionType == 'lClash') {
             edgeColor = 'pink';
+            physics = true;
         } else {
             edgeColor = 'purple';
+            physics = false;
         }
+        // console.log(edgeColor);
 
         if (self.selected && other.selected) {
             self.saladManager.edges.update({
@@ -80,7 +90,7 @@ var SaladIngredient = function(saladManager, data) {
                     inherit: false,
                     highlight: edgeColor
                 },
-                physics: true,
+                physics: physics,
                 dashes: false,
             })
         } else if ((self.connected || other.connected) && (connectionType != 'lClash' && connectionType != 'uClash')) {
@@ -93,7 +103,7 @@ var SaladIngredient = function(saladManager, data) {
                     inherit: false,
                     highlight: edgeColor
                 },
-                physics: true,
+                physics: physics,
                 dashes: true
             });
         } else {
@@ -103,12 +113,14 @@ var SaladIngredient = function(saladManager, data) {
 
     self.render = function() {
         if (self.present) {
+            $('#present').selectivity('add', self.name);
             var backgroundColor;
             if (self.selected) {
                 backgroundColor = self.color;
             } else {
                 backgroundColor = 'white';
             }
+            // console.log('backgroundColor', backgroundColor);
             var borderColor;
             var borderWidth;
             if (self.locked) {
@@ -140,6 +152,9 @@ var SaladIngredient = function(saladManager, data) {
             self.udNames.forEach(function(otherName) {
                 self.renderConnection(otherName, 'ud');
             });
+            // self.ldNames.forEach(function(otherName) {
+            //     self.renderConnection(otherName, 'ld');
+            // });
             self.uClashNames.forEach(function(otherName) {
                 self.renderConnection(otherName, 'uClash');
             });
@@ -166,6 +181,18 @@ var SaladIngredient = function(saladManager, data) {
             }
         } else {
             self.saladManager.nodes.remove([self.id]);
+            $('#present').selectivity('remove', self.name);
         }
+    }
+
+    self.clear = function() {
+        self.present = false;
+        self.saladManager.presentSet.delete(self);
+        self.selected = false;
+        self.saladManager.selectedSet.delete(self);
+        self.locked = false;
+        self.saladManager.lockedSet.delete(self);
+        self.connected = false;
+        self.saladManager.connectedSet.delete(self);
     }
 }
