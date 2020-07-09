@@ -138,7 +138,7 @@ var SaladManager = function() {
     }
 
     self.load = function() {
-        self.saveToLocalStorage('projectNames', ['salad_current'])
+        // self.saveToLocalStorage('projectNames', ['salad_current'])
         // var aboutedJson = localStorage.salad_abouted;
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
             // console.log('backing shit the fuck up.')
