@@ -62,90 +62,12 @@ var SaladManager = function() {
         });
         return ingredients;
     }
-
-    self.existsInLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
-        if (varJson) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    self.getFromLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
-        if (varJson) { // since I want this to execute if varJson is truthy
-            return JSON.parse(varJson);
-        } else {
-            return null;
-        }
-    }
-
-    self.saveToLocalStorage = function(varName, varContent) {
-        localStorage['salad_' + varName] = JSON.stringify(varContent);
-    }
-
-    self.saveProjectToLocalStorage = function(projectName) {
-        if (projectName != undefined) {
-            console.log('SAVING TO LOCAL STORAGE');
-            var data = {
-                presentArray: self.getNamesFromSet(self.presentSet),
-                selectedArray: self.getNamesFromSet(self.selectedSet),
-                lockedArray: self.getNamesFromSet(self.lockedSet),
-                connectedArray: self.getNamesFromSet(self.connectedSet)
-            };
-            // console.log('PRESENT', data.presentArray);
-            // console.log('SELECTED', data.selectedArray);
-            // console.log('LOCKED', data.lockedArray);
-            // localStorage['salad_'projectName] = JSON.stringify(data);
-            self.saveToLocalStorage(projectName, data);
-
-            // var projectNamesJson = localStorage.projectNames;
-            var projectNamesSet;
-            if (self.existsInLocalStorage('projectNames')) {
-                projectNamesSet = new Set(self.getFromLocalStorage('projectNames'));
-            } else {
-                projectNamesSet = new Set([]);
-            }
-            projectNamesSet.add(projectName);
-            console.log(projectNamesSet)
-            self.saveToLocalStorage('projectNames', Array.from(projectNamesSet));
-            // localStorage.projectNames = JSON.stringify(Array.from(projectNamesSet));
-        }
-    }
-
-    self.loadProjectFromLocalStorage = function(projectName) {
-        if (projectName != undefined) {
-            console.log('LOADING FROM LOCAL STORAGE');
-            // var dataJson = localStorage[projectName];
-            if (self.existsInLocalStorage(projectName)) {
-                data = self.getFromLocalStorage(projectName);
-                self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
-                self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
-                self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
-                self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
-                self.ingredients.forEach(function(ingredient) {
-                    ingredient.present = self.presentSet.has(ingredient);
-                    ingredient.selected = self.selectedSet.has(ingredient);
-                    ingredient.locked = self.lockedSet.has(ingredient);
-                    ingredient.connected = self.connectedSet.has(ingredient)
-                    ingredient.render();
-                });
-            } else {
-                console.log('no data found in localStorage')
-            }
-        }
-    }
-
     self.load = function() {
-        // var aboutedJson = localStorage.salad_abouted;
-        if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
-            console.log('backing shit the fuck up.')
-            self.saveToLocalStorage('current', JSON.parse(localStorage.current))
+        var aboutedJson = localStorage.abouted;
+        if (!aboutedJson || JSON.parse(aboutedJson) == false) {
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
-            self.saveToLocalStorage('abouted', true);
-            // localStorage.salad_abouted = JSON.stringify(true);
+            localStorage.abouted = JSON.stringify(true);
         }
         fetch('/get_salad_ingredients', {
             method: 'get'
@@ -179,9 +101,10 @@ var SaladManager = function() {
                 }
             });
         }).then(function() { // idk if this is set up right, the way render is an alternative to load
-            if (self.existsInLocalStorage('')) {
+            var cacheJson = localStorage[''];
+            if (cacheJson) {
                 console.log('CACHE FOUND');
-                self.loadProjectFromLocalStorage('');
+                self.loadFromLocalStorage('');
             } else {
                 self.ingredients.forEach(function(ingredient) {
                     ingredient.render();
@@ -190,7 +113,7 @@ var SaladManager = function() {
         });
     };
 
-    self.clickTimeout = null;
+    self.clickTimeout = null
 
     self.network.on('click', function(properties) {
         if (self.clickTimeout) {
@@ -212,7 +135,7 @@ var SaladManager = function() {
                         self.selectedSet.add(ingredient);
                     }
                     ingredient.render();
-                    self.saveProjectToLocalStorage('');
+                    self.saveToLocalStorage('');
                 }
                 self.clickTimeout = null;
             }, 250);
@@ -234,7 +157,7 @@ var SaladManager = function() {
                 self.lockedSet.add(ingredient)
             }
             ingredient.render()
-            self.saveProjectToLocalStorage('');
+            self.saveToLocalStorage('');
         }
     });
 
@@ -254,15 +177,65 @@ var SaladManager = function() {
                 self.connectedSet.add(ingredient);
             }
             ingredient.render();
-            self.saveProjectToLocalStorage('');
+            self.saveToLocalStorage('');
         }
     });
 
+    self.saveToLocalStorage = function(projectName) {
+        if (projectName != undefined) {
+            console.log('SAVING TO LOCAL STORAGE');
+            var data = {
+                presentArray: self.getNamesFromSet(self.presentSet),
+                selectedArray: self.getNamesFromSet(self.selectedSet),
+                lockedArray: self.getNamesFromSet(self.lockedSet),
+                connectedArray: self.getNamesFromSet(self.connectedSet)
+            };
+            // console.log('PRESENT', data.presentArray);
+            // console.log('SELECTED', data.selectedArray);
+            // console.log('LOCKED', data.lockedArray);
+            localStorage[projectName] = JSON.stringify(data);
+
+            var projectNamesJson = localStorage.projectNames;
+            var projectNamesSet;
+            if (projectNamesJson) {
+                projectNamesSet = new Set(JSON.parse(projectNamesJson));
+            } else {
+                projectNamesSet = new Set([]);
+            }
+            projectNamesSet.add(projectName);
+            localStorage.projectNames = JSON.stringify(Array.from(projectNamesSet));
+        }
+    }
+
+    self.loadFromLocalStorage = function(projectName) {
+        if (projectName != undefined) {
+            console.log('LOADING FROM LOCAL STORAGE');
+            var dataJson = localStorage[projectName];
+            if (dataJson) {
+                data = JSON.parse(dataJson);
+                self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
+                self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
+                self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
+                self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
+                self.ingredients.forEach(function(ingredient) {
+                    ingredient.present = self.presentSet.has(ingredient);
+                    ingredient.selected = self.selectedSet.has(ingredient);
+                    ingredient.locked = self.lockedSet.has(ingredient);
+                    ingredient.connected = self.connectedSet.has(ingredient)
+                    ingredient.render();
+                });
+            } else {
+                console.log('no data found in localStorage')
+            }
+        }
+    }
+
     $('#save').click(function() {
         var message = '';
-        if (self.existsInLocalStorage('projectNames')) {
+        var projectNamesJson = localStorage.projectNames;
+        if (projectNamesJson) {
             message += 'Saved projects:\n';
-            self.getFromLocalStorage('projectNames').forEach(function(name) {
+            JSON.parse(projectNamesJson).forEach(function(name) {
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -274,30 +247,32 @@ var SaladManager = function() {
         var projectName = prompt(message);
 
         if (projectName && projectName != '') {
-            self.saveProjectToLocalStorage(projectName);
+            self.saveToLocalStorage(projectName);
             console.log('SAVED');
         }
     });
 
     $('#load').click(function() {
-        console.log(localStorage);
-        // var projectNamesExists = self.existsInLocalStorage('projectNames');
-        // var projectNames;
-        var message = '';
+        var projectNamesJson = localStorage.projectNames;
         var projectNames;
-        if (self.existsInLocalStorage('projectNames')) {
-            projectNames = self.getFromLocalStorage('projectNames');
+        if (projectNamesJson) {
+            projectNames = JSON.parse(projectNamesJson);
+        } else {
+            projectNames = [];
+        }
+
+        var message = '';
+        var projectNamesJson = localStorage.projectNames;
+        if (projectNamesJson) {
             message += 'Saved projects:\n';
-            self.getFromLocalStorage('projectNames').forEach(function(name) {
+            JSON.parse(projectNamesJson).forEach(function(name) {
                 if (name != '') {
                     message += name + '\n';
                 }
             });
         } else {
             message += 'No saved projects.\n';
-            var projectNames = [];
         }
-
         message += '\nPlease enter a project to load:';
         var projectName = prompt(message);
 
@@ -306,9 +281,9 @@ var SaladManager = function() {
             if (!projectNameSet.has(projectName)) {
                 alert('Project not found, please try again.')
             } else {
-                self.loadProjectFromLocalStorage(projectName);
+                self.loadFromLocalStorage(projectName);
                 console.log('LOADED');
-                self.saveProjectToLocalStorage('');
+                self.saveToLocalStorage('');
             }
         }
     });
@@ -332,7 +307,6 @@ var SaladManager = function() {
                 ingredient.present = true;
                 ingredient.render();
             });
-            self.saveProjectToLocalStorage('');
         }
     });
 
@@ -343,7 +317,6 @@ var SaladManager = function() {
                 ingredient.clear();
                 ingredient.render();
             });
-            self.saveProjectToLocalStorage('');
         }
     });
 
@@ -395,7 +368,7 @@ var SaladManager = function() {
                 ingredient.render();
             });
 
-            self.saveProjectToLocalStorage('');
+            self.saveToLocalStorage('');
         });
     }
 
