@@ -1,4 +1,4 @@
-var SaladManager = function() {
+var StirFryManager = function() {
     var self = this;
 
     self.nodes = new vis.DataSet();
@@ -67,7 +67,7 @@ var SaladManager = function() {
     }
 
     self.existsInLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
+        var varJson = localStorage['stir_fry_' + varName];
         if (varJson) {
             return true;
         } else {
@@ -76,7 +76,7 @@ var SaladManager = function() {
     }
 
     self.getFromLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
+        var varJson = localStorage['stir_fry_' + varName];
         if (varJson) { // since I want this to execute if varJson is truthy
             return JSON.parse(varJson);
         } else {
@@ -85,7 +85,7 @@ var SaladManager = function() {
     }
 
     self.saveToLocalStorage = function(varName, varContent) {
-        localStorage['salad_' + varName] = JSON.stringify(varContent);
+        localStorage['stir_fry_' + varName] = JSON.stringify(varContent);
     }
 
     self.saveProjectToLocalStorage = function(projectName) {
@@ -105,7 +105,7 @@ var SaladManager = function() {
             } else {
                 projectNamesSet = new Set([]);
             }
-            projectNamesSet.add('salad_' + projectName);
+            projectNamesSet.add('stir_fry_' + projectName);
             self.saveToLocalStorage('projectNames', Array.from(projectNamesSet));
         }
     }
@@ -134,11 +134,12 @@ var SaladManager = function() {
 
     self.load = function() {
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
+
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
             self.saveToLocalStorage('abouted', true);
         }
-        fetch('/get-salad-ingredients', {
+        fetch('/get-stir-fry-ingredients', {
             method: 'get'
         }).then(function(response) {
             if (!response.ok) {
@@ -150,11 +151,11 @@ var SaladManager = function() {
         }).then(function(ingredients) {
             self.ingredients = []
             ingredients.forEach(function(ingredient) {
-                var saladIngredient = new SaladIngredient(self, ingredient);
-                self.ingredients.push(saladIngredient);
-                self.presentSet.add(saladIngredient);
+                var stirFryIngredient = new StirFryIngredient(self, ingredient);
+                self.ingredients.push(stirFryIngredient);
+                self.presentSet.add(stirFryIngredient);
             });
-
+        }).then(function() {
             $('#present').selectivity({
                 items: self.getIngredientNames(),
                 multiple: true,
@@ -174,7 +175,7 @@ var SaladManager = function() {
                     ingredient.render();
                 }
             });
-
+        }).then(function() { // idk if this is set up right, the way render is an alternative to load
             if (self.existsInLocalStorage('')) {
                 console.log('CACHE FOUND');
                 self.loadProjectFromLocalStorage('');
@@ -261,7 +262,7 @@ var SaladManager = function() {
         if (self.existsInLocalStorage('projectNames')) {
             message += 'Saved projects:\n';
             self.getFromLocalStorage('projectNames').forEach(function(name) {
-                name = name.split('salad_').slice(1).join('');
+                name = name.split('stir_fry_').slice(1).join('');
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -285,7 +286,7 @@ var SaladManager = function() {
             projectNames = self.getFromLocalStorage('projectNames');
             message += 'Saved projects:\n';
             self.getFromLocalStorage('projectNames').forEach(function(name) {
-                name = name.split('salad_').slice(1).join('');
+                name = name.split('stir_fry_').slice(1).join('');
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -300,7 +301,7 @@ var SaladManager = function() {
 
         if (projectName && projectName != '') {
             var projectNameSet = new Set(projectNames);
-            if (!projectNameSet.has('salad_'+projectName)) {
+            if (!projectNameSet.has('stir_fry_'+projectName)) {
                 alert('Project not found, please try again.')
             } else {
                 self.loadProjectFromLocalStorage(projectName);
@@ -310,7 +311,6 @@ var SaladManager = function() {
         }
     });
 
-    // $('#about-window').hide();
     $('#about').click(function() {
         $('#recipe-window').hide();
         $('#about-window').show();
@@ -346,8 +346,7 @@ var SaladManager = function() {
     self.generate = function() {
         if (!self.generating) {
             $('#generating').show();
-            self.generating = true;
-            fetch('/generate-salad', {
+            fetch('/generate-stir-fry', {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json',
@@ -400,7 +399,7 @@ var SaladManager = function() {
                 self.generating = false;
             });
         } else {
-            console.log('Already generating.')
+            console.log('Already generating.');
         }
     }
 
@@ -416,117 +415,83 @@ var SaladManager = function() {
     });
 
     $('#recipe').click(function() {
-        console.log('clicked')
-        var leafyGreenNames = [];
-        var extraNames = [];
-        var extraVegNames = [];
-        var extraFruitNames = [];
-        var extraNutSeedNames = [];
-        var extraOtherNames = [];
-        var dressingNames = [];
-        var dressingOilNames = [];
-        var dressingVinegarNames = [];
-        var dressingSaltNames = [];
-        var dressingPepperNames = [];
+        var earlyNames = [];
+        var earlyMidNames = [];
+        var earlyMidLateNames = [];
+        var midNames = [];
+        var midLateNames = [];
+        var midLateFlavoringNames = [];
+        var lateNames = [];
+        var lateFlavoringNames = [];
+        var flavoringNames = [];
 
         self.selectedSet.forEach(function(ingredient) {
-            // console.log('name', ingredient.name, ingredient.data);
-            if (ingredient.data.salad_green == 'y') {
-                // console.log('leafy green')
-                leafyGreenNames.push(ingredient.name);
-            } else if (ingredient.data.salad_extra == 'y') {
-                // console.log('extra')
-                extraNames.push(ingredient.name);
-                if (ingredient.data.salad_extra_veg == 'y') {
-                    extraVegNames.push(ingredient.name);
-                } else if (ingredient.data.salad_extra_fruit == 'y') {
-                    extraFruitNames.push(ingredient.name);
-                } else if (ingredient.data.salad_extra_nut_seed == 'y') {
-                    extraNutSeedNames.push(ingredient.name);
+            console.log('ingredient', ingredient.name)
+            if (ingredient.data.stir_fry_early == 'y') {
+                if (ingredient.data.stir_fry_mid == 'y') {
+                    if (ingredient.data.stir_fry_late == 'y') {
+                        earlyMidLateNames.push(ingredient.name);
+                    } else {
+                        earlyMidNames.push(ingredient.name);
+                    }
                 } else {
-                    extraOtherNames.push(ingredient.name);
+                    earlyNames.push(ingredient.name);
                 }
-            } else if (ingredient.data.salad_dressing == 'y') {
-                // console.log('dressing')
-                dressingNames.push(ingredient.name);
-                if (ingredient.data.salad_dressing_oil == 'y') {
-                    dressingOilNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_vinegar == 'y') {
-                    dressingVinegarNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_salt == 'y') {
-                    dressingSaltNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_pepper == 'y') {
-                    dressingPepperNames.push(ingredient.name);
+            } else if (ingredient.data.stir_fry_mid == 'y') {
+                if (ingredient.data.stir_fry_late == 'y') {
+                    if (ingredient.data.stiri_fry_garnish == 'y') {
+                        midLateFlavoringNames.push(ingredient.name);
+                    } else {
+                            midLateNames.push(ingredient.name);
+                    }
+                } else {
+                    midNames.push(ingredient.name);
                 }
+            } else if (ingredient.data.stir_fry_late == 'y') {
+                if (ingredient.data.stir_fry_garnish == 'y') {
+                    lateFlavoringNames.push(ingredient.name);
+                } else {
+                    lateNames.push(ingredient.name);
+                }
+            } else if (ingredient.data.stir_fry_garnish == 'y') {
+                flavoringNames.push(ingredient.name);
             }
         });
-        // console.log('LEAFY GREEN NAMES', leafyGreenNames); //empty
-        // console.log('EXTRA NAMES', extraNames); //115
-        // console.log('DRESSING NAMES', dressingNames); //21
-        var leafyGreensHtml = '<li>Leafy greens</li><ul>';
-        if (leafyGreenNames.length > 0) {
-            // console.log('leafy greens long enough', leafygreenNames)
-            leafyGreenNames.forEach(function(name) {
-                leafyGreensHtml += '<li>' + name + '</li>';
+
+        var html = '';
+        if (Array.from(self.selectedSet).length > 1) {
+            earlyNames.forEach(function(name) {
+                html += '<li>[early] ' + name + '</li>';
+            });
+            earlyMidNames.forEach(function(name) {
+                html += '<li>[early-mid] ' + name + '</li>';
+            });
+            earlyMidLateNames.forEach(function(name) {
+                html += '<li>[early-mid-late] ' + name + '</li>';
+            });
+            midNames.forEach(function(name) {
+                html += '<li>[mid] ' + name + '</li>';
+            });
+            midLateNames.forEach(function(name) {
+                html += '<li>[mid-late] ' + name + '</li>';
+            });
+            midLateFlavoringNames.forEach(function(name) {
+                html += '<li>[mid-late-flavoring] ' + name + '</li>';
+            });
+            lateNames.forEach(function(name) {
+                html += '<li>[late] ' + name + '</li>';
+            });
+            lateFlavoringNames.forEach(function(name) {
+                html += '<li>[late-flavoring] ' + name + '</li>';
+            });
+            flavoringNames.forEach(function(name) {
+                html += '<li>[flavoring] ' + name + '</li>';
             });
         } else {
-            leafyGreensHtml += '<li>Oh no! You haven\'nt selected any leafy greens. You\'ll need to go back and add some before you can make a tasty salad.</li>';
+            html += '<li>You haven\'t selected any ingredients! This won\'nt be much of a stir fry, will it?</li>'
         }
-        leafyGreensHtml += '</ul>'
 
-        var extrasHtml = '<li>Extras</li><ul>';
-        if (extraNames.length > 0) {
-            extraNames.forEach(function(name) {
-                extrasHtml += '<li>' + name + '</li>';
-            });
-        } else {
-            extrasHtml += '<li>You haven\'nt selected any salad extras. You\'ll probably want to go back and add some, or your salad might not be very interesting.</li>';
-        }
-        extrasHtml += '</ul>'
-
-        var dressingHtml = '<li>Dressing</li><ul>';
-        if (dressingNames.length > 0) {
-            // console.log('dressing long enough')
-            if (dressingOilNames.length > 0) {
-                // console.log('some oil names')
-                dressingOilNames.forEach(function(name) {
-                    dressingHtml += '<li>(~1 tbs/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing oil. I suspect the salad would taste better if you go back and add one!</li>';
-            }
-            if (dressingVinegarNames.length > 0) {
-                // console.log('some vinegar')
-                dressingVinegarNames.forEach(function(name) {
-                    dressingHtml += '<li>(~.5 tbs/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing vinegar. Without vinegar, your salad will probably taste lopsided; you might want to go back and add one.</li>';
-            }
-            if (dressingSaltNames.length > 0) {
-                // console.log('some salt')
-                dressingSaltNames.forEach(function(name) {
-                    dressingHtml += '<li>(~a pinch/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a salt. This one\'s kinda optional, but I\'d strongly suggest you at least try adding salt to a salad or two.</li>';
-            }
-            if (dressingPepperNames.length > 0) {
-                // console.log('some pepper')
-                dressingPepperNames.forEach(function(name) {
-                    dressingHtml += '<li>(~1/4 tsp/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing pepper. Pepper isn\'t as crucial as some other ingredients, but I\'d strongly recommend at least trying it a few times.</li>';
-            }
-        } else {
-            dressingHtml += '<li>You haven\'nt selected any dressing ingredients at all! I suspect your salad will be pretty dry without dressing...</li>';
-        }
-        dressingHtml += '</ul>';
-        // console.log('leafygreenshtml', leafyGreensHtml);
-        // console.log('extrashtml', extrasHtml);
-        // console.log('dressingHtml', dressingHtml);
-        $('#ingredients-list').html(leafyGreensHtml + extrasHtml + dressingHtml);
+        $('#ingredients-list').html(html);
         $('#about-window').hide();
         $('#recipe-window').show();
     });

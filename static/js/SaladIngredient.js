@@ -1,5 +1,6 @@
 var SaladIngredient = function(saladManager, data) {
     var self = this;
+
     self.saladManager = saladManager;
     self.data = data;
 
@@ -42,7 +43,6 @@ var SaladIngredient = function(saladManager, data) {
     }
 
     self.renderConnection = function(otherName, connectionType) {
-        // console.log('other name', otherName);
         var other = self.saladManager.getFromName(otherName);
         var edgeId;
         var fromId;
@@ -59,26 +59,28 @@ var SaladIngredient = function(saladManager, data) {
 
         var edgeColor;
         var physics;
+        var hidden;
         if (connectionType == 'ud') {
             edgeColor = 'black';
             physics = true;
+            hidden = false;
         } else if (connectionType == 'uc') {
             edgeColor = 'lightgrey';
             physics = true;
-        // } else if (connectionType == 'ld') {
-        //     edgeColor = 'lightgrey';
-        //     physics = false;
-        } else if (connectionType == 'uClash') {
-            edgeColor = 'red';
-            physics = true;
-        } else if (connectionType == 'lClash') {
-            edgeColor = 'pink';
-            physics = true;
+            hidden = false;
+        } else if (connectionType == 'ld') {
+            edgeColor = 'whitesmoke';
+            physics = self.selected && other.selected;
+            hidden = false;
+        // } else if (connectionType == 'lc') {
+        //     edgeColor = 'purple';
+        //     physics = false;//self.selected && other.selected;
+        //     hidden = true;
         } else {
             edgeColor = 'purple';
             physics = false;
+            hidden = false;
         }
-        // console.log(edgeColor);
 
         if (self.selected && other.selected) {
             self.saladManager.edges.update({
@@ -92,6 +94,7 @@ var SaladIngredient = function(saladManager, data) {
                 },
                 physics: physics,
                 dashes: false,
+                hidden: hidden
             })
         } else if ((self.connected || other.connected) && (connectionType != 'lClash' && connectionType != 'uClash')) {
             self.saladManager.edges.update({
@@ -104,7 +107,8 @@ var SaladIngredient = function(saladManager, data) {
                     highlight: edgeColor
                 },
                 physics: physics,
-                dashes: true
+                dashes: true,
+                hidden: hidden
             });
         } else {
             self.saladManager.edges.remove([edgeId]);
@@ -120,7 +124,6 @@ var SaladIngredient = function(saladManager, data) {
             } else {
                 backgroundColor = 'white';
             }
-            // console.log('backgroundColor', backgroundColor);
             var borderColor;
             var borderWidth;
             if (self.locked) {
@@ -152,9 +155,12 @@ var SaladIngredient = function(saladManager, data) {
             self.udNames.forEach(function(otherName) {
                 self.renderConnection(otherName, 'ud');
             });
-            // self.ldNames.forEach(function(otherName) {
-            //     self.renderConnection(otherName, 'ld');
+            // self.lcNames.forEach(function(otherName) {
+            //     self.renderConnection(otherName, 'lc');
             // });
+            self.ldNames.forEach(function(otherName) {
+                self.renderConnection(otherName, 'ld');
+            });
             self.uClashNames.forEach(function(otherName) {
                 self.renderConnection(otherName, 'uClash');
             });
@@ -162,7 +168,6 @@ var SaladIngredient = function(saladManager, data) {
                 self.renderConnection(otherName, 'lClash');
             });
 
-            self.ud
             var edgeId = self.id.toString() + '-' + self.id.toString();
             if (self.connected) {
                 self.saladManager.edges.update({

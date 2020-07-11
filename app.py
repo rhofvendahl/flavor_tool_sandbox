@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 
 import pandas as pd
@@ -8,26 +8,27 @@ import random
 
 root_path = os.getcwd()
 salad_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/salad_flavor_data.pickle'))
+stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_flavor_data.pickle'))
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def root():
+    return redirect(url_for('salad_index'))
 
-@app.route('/get_salad_ingredients', methods=['GET'])
+@app.route('/salad')
+def salad_index():
+    return render_template('salad-index.html')
+
+@app.route('/get-salad-ingredients', methods=['GET'])
 def get_salad_ingredients():
-    # salad_data_requested = request.args.get('salad')
-    # stir_fry_data_requested = request.args.get('stir_fry')
-
     salad_ingredients = [
         {
             col_name: row[col_name]
         for col_name in salad_flavor_data.columns.tolist()}
     for i, row in salad_flavor_data.iterrows()]
-    # for name in salad_flavor_data[salad_flavor_data['veg'] == 'y']['name']:
-    #     print(name)
+    # print(salad_flavor_data.columns.tolist())
     return jsonify(salad_ingredients)
 
-@app.route('/generate_salad', methods=['POST'])
+@app.route('/generate-salad', methods=['POST'])
 def generate_salad():
     content = request.get_json()
     locked_names = content['locked']
@@ -116,7 +117,6 @@ def generate_salad():
             G.add_edges_from(upper_category_pairs, length=1.2)
             G.add_edges_from(upper_direct_pairs, length=1)
             n_subgraphs = len(list(nx.connected_components(G)))
-            # print(n_subgraphs)
 
         score = 0
 
@@ -173,7 +173,6 @@ def generate_salad():
         juicy_score = (n_juicy_lower/2 + n_juicy_upper)/3
 
         texture_balance_score = 5 / (1 + abs(1-crunchy_score) + abs(1-chewy_score) + abs(1-juicy_score)) - 1.25
-    #     print(texture_balance_score)
         score += texture_balance_score * .75
 
     # will bias toward larger salads, slightly
@@ -214,6 +213,152 @@ def generate_salad():
     }
     return jsonify(data)
 
+@app.route('/stir-fry')
+def stir_fry_index():
+    return render_template('stir-fry-index.html')
+
+@app.route('/get-stir-fry-ingredients', methods=['GET'])
+def get_stir_fry_ingredients():
+    stir_fry_ingredients = [
+        {
+            col_name: row[col_name]
+        for col_name in stir_fry_flavor_data.columns.tolist()}
+    for i, row in stir_fry_flavor_data.iterrows()]
+    return jsonify(stir_fry_ingredients)
+
+@app.route('/generate-stir-fry', methods=['POST'])
+def generate_stir_fry():
+# TODO: account for if connected subgraph is impossible
+    content = request.get_json()
+    locked_names = content['locked']
+    present_names = content['present']
+
+    stir_fry_data = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
+    stir_fry_data.reset_index(inplace=True)
+
+    locked = stir_fry_data[stir_fry_data['name'].isin(locked_names)]
+    locked_fat_oils = locked[locked['stir_fry_fat_oil'] == 'y']
+    locked_salts = locked[locked['stir_fry_salt'] == 'y']
+    locked_other_flavorings = locked[(locked['stir_fry_flavoring'] == 'y') & (locked['stir_fry_salt'] != 'y')]
+    locked_foodstuffs = locked[(locked['stir_fry_fat_oil'] != 'y') & (locked['stir_fry_salt'] != 'y') & (locked['stir_fry_flavoring'] != 'y')]
+
+    the_rest = stir_fry_data[~stir_fry_data['name'].isin(locked['name'])]
+    the_rest_fat_oils = the_rest[the_rest['stir_fry_fat_oil'] == 'y']
+    the_rest_salts = the_rest[the_rest['stir_fry_salt'] == 'y']
+    the_rest_other_flavorings = the_rest[(the_rest['stir_fry_flavoring'] == 'y') & (the_rest['stir_fry_salt'] != 'y')]
+    the_rest_foodstuffs = the_rest[(the_rest['stir_fry_fat_oil'] != 'y') & (the_rest['stir_fry_salt'] != 'y') & (the_rest['stir_fry_flavoring'] != 'y')]
+
+    n_gen_salts = max(1 - len(locked_salts), 0)
+    n_gen_fat_oils = max(1 - len(locked_fat_oils), 0)
+    n_gen_other_flavorings_min = max(1 - len(locked_other_flavorings), 0)
+    n_gen_other_flavorings_max = max(3 - len(locked_other_flavorings), 0)
+    n_gen_foodstuffs_min = max(3 - len(locked_foodstuffs), 0)
+    n_gen_foodstuffs_max = max(7 - len(locked_foodstuffs), 0)
+
+    n_iterations = len(present_names)*2
+    top_score = 0
+    for try_i in range(n_iterations):
+        n_subgraphs = 2
+        while n_subgraphs > 1: # keep shuffling until you get a well connected graph
+            n_gen_other_flavorings = min(random.randrange(n_gen_other_flavorings_min, n_gen_other_flavorings_max+1), len(the_rest_other_flavorings))
+            n_gen_foodstuffs = min(random.randrange(n_gen_foodstuffs_min, n_gen_foodstuffs_max+1), len(the_rest_foodstuffs))
+
+            selected_salts = locked_salts.append(the_rest_salts.sample(n_gen_salts))
+            selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_gen_fat_oils))
+            selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_gen_other_flavorings))
+            selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_gen_foodstuffs))
+            selected_ingredients = selected_salts.append(selected_fat_oils).append(selected_other_flavorings).append(selected_foodstuffs)
+            selected_names = selected_ingredients['name'].values.tolist()
+
+            lower_category_pairs = []
+            lower_direct_pairs = []
+            upper_category_pairs = []
+            upper_direct_pairs = []
+
+            # finicky but pretty fast
+            for i, col_name in enumerate(selected_names):
+                for j, row_name in enumerate(selected_names[i+1:]):
+                    connection = selected_ingredients[col_name].tolist()[i+1+j] # this is what is finicky
+                    if connection == 'c':
+                        lower_category_pairs.append((col_name, row_name,))
+                    elif connection == 'd':
+                        lower_direct_pairs.append((col_name, row_name,))
+                    elif connection == 'C':
+                        upper_category_pairs.append((col_name, row_name,))
+                    elif connection == 'D':
+                        upper_direct_pairs.append((col_name, row_name,))
+            lower_pairs = lower_category_pairs + lower_direct_pairs
+            upper_pairs = upper_category_pairs + upper_direct_pairs
+            all_pairs = lower_pairs + upper_pairs
+            G = nx.Graph()
+            G.add_nodes_from(selected_names)
+            G.add_edges_from(lower_category_pairs, length=2)
+            G.add_edges_from(lower_direct_pairs, length=1.5)
+            G.add_edges_from(upper_category_pairs, length=1.2)
+            G.add_edges_from(upper_direct_pairs, length=1)
+            n_subgraphs = len(list(nx.connected_components(G)))
+        score = 0
+
+    # PAIRING BONUS ============================================================================================
+    # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
+        average_shortest_path_length = nx.average_shortest_path_length(G, weight='length')
+        average_shortest_path_score = 1 / average_shortest_path_length * 4 - 1
+    #     print(average_shortest_path_score)
+        score += average_shortest_path_score * 3
+
+    # FLAVOR BALANCE BONUS =============================================================================================
+    # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
+        n_sweet_lower = (selected_ingredients['sweet'] == 'y').sum()
+        n_sweet_upper = (selected_ingredients['sweet'] == 'Y').sum()
+        n_salty_lower = (selected_ingredients['salty'] == 'y').sum()
+        n_salty_upper = (selected_ingredients['salty'] == 'Y').sum()
+        n_sour_lower = (selected_ingredients['sour'] == 'y').sum()
+        n_sour_upper = (selected_ingredients['sour'] == 'Y').sum()
+        n_savory_lower = (selected_ingredients['savory'] == 'y').sum()
+        n_savory_upper = (selected_ingredients['savory'] == 'Y').sum()
+        n_bitter_lower = (selected_ingredients['bitter'] == 'y').sum()
+        n_bitter_upper = (selected_ingredients['bitter'] == 'Y').sum()
+        n_spicy_lower = (selected_ingredients['spicy'] == 'y').sum()
+        n_spicy_upper = (selected_ingredients['spicy'] == 'Y').sum()
+
+        # each varies from roughly .5 to 1 (normalized to the average flavor score)
+        sweet_score = (n_sweet_lower/2 + n_sweet_upper)/6
+        salty_score = (n_salty_lower/2 + n_salty_upper)/4
+        sour_score = (n_sour_lower/2 + n_sour_upper)/2.5
+        savory_score = (n_savory_lower/2 + n_savory_upper)/3
+        bitter_score = (n_bitter_lower/2 + n_bitter_upper)/3
+        spicy_score = (n_spicy_lower/2 + n_spicy_upper)/3
+
+        flavor_balance_score = 5 / (1 + abs(1-sweet_score) + abs(1-salty_score) + abs(1-sour_score) + abs(1-savory_score) + abs(1-spicy_score)) - .9
+        score += flavor_balance_score
+
+    # will bias toward larger stir_frys, slightly
+    # PROTEIN BONUS =========================================================================================
+    # ranges from roughly (0 to 1) * .5 (mostly balanced on its own)
+        n_protein = (selected_ingredients['stir_fry_protein'] == 'y').sum()
+
+        # /2 for steep diminishing returns (?)
+        protein_score = (n_protein/2)**.5 * .75
+        score += protein_score * .5
+
+        if score > top_score:
+            top_selected_ingredients = selected_ingredients
+            top_pairing_bonus = average_shortest_path_score
+            top_flavor_balance_bonus = flavor_balance_score
+            top_protein_bonus = protein_score
+            top_score = score
+
+    data = {
+        'present_names': present_names,
+        'selected_names': top_selected_ingredients['name'].tolist(),
+        'locked_names': locked_names,
+        'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
+        'pairing_bonus': top_pairing_bonus,
+        'flavor_balance_bonus': top_flavor_balance_bonus,
+        'protein_bonus': top_protein_bonus,
+        'score': top_score
+    }
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run()

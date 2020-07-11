@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+    <title>Flavor Tool</title>
+
+    <link rel='stylesheet' href='static/css/lib/selectivity-jquery.min.css' type='text/css'>
+    <link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' type='text/css'>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='static/css/lib/vis-network.min.css' rel='stylesheet' type='text/css' />
+    <link href='static/css/salad-style.css' rel='stylesheet' type='text/css' />
+    <link rel='shortcut icon' href='static/img/favicon.ico'>
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type='text/javascript' src='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js'></script>
+    <script type='text/javascript' src='static/js/lib/vis-network.min.js'></script>
+    <script type='text/javascript' src='static/js/lib/selectivity-jquery.min.js'></script>
+    <script type='text/javascript' src='static/js/SaladIngredient.js'></script>
+    <script type='text/javascript' src='static/js/SaladManager.js'></script>
+    <script type='text/javascript' src='static/js/salad-main.js'></script>
+</head>
+
+<body>
+    <div class='container-fluid'>
+        <div id='generating' class="card shadow">
+            <div class="card-header">Generating...</div>
+        </div>
+        <div id='about-window' class="card shadow">
+            <div class="card-header">
+                About
+                <button id='about-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title mb-4">Welcome to the Flavor Tool!</h5>
+                <p class="card-text mb-4">The top left box lists all currently present ingredients. To add an ingredient, just search and click (or press enter); to remove an ingredient press the "X" (or backspace). You can use the "all" and "none" buttons to add or remove in bulk.</p>
+                <p class="card-text mb-2">The main window displays each present ingredient as a color-coded node:</p>
+                <ul>
+                    <li>light green=leafy green</li>
+                    <li>green=vegetable</li>
+                    <li>orange=fruit</li>
+                    <li>brown=nut or seed</li>
+                    <li>tan=dressing component</li>
+                    <li>grey=other</li>
+                </ul>
+                <p class="card-text mb-2">There are three ways to manipulate these ingredients:</p>
+                <ol>
+                    <li><strong>Click to select</strong> an ingredient, marking it to include in the salad. Click again to de-select.</li>
+                    <li><strong>Double click to lock</strong> an ingredient. If you auto-generate a salad, these ingredients will be used as a base. Double click again to unlock.</li>
+                    <li><strong>Right click</strong> an ingredient to show which other ingredients <strong>pair with</strong> it. Black lines are strong pairs, grey lines are weaker.</li>
+                </ol>
+                <p class="card-text mb-4">Selected ingredients that pair well together will be connected with a solid line (black for strong, grey for weak), while selected ingredients that clash will be marked with a red line (lighter red for minor clash).</p>
+                <p class="card-text mb-4">When you've selected a set of ingredients you like, try locking them and pressing "<strong>Generate</strong>", on the left (or spacebar). This will draw on a bunch of flavor data (mostly gathered from <em>The Vegetarian Flavor Bible</em>, Page 2014) to select some other ingredients that (hopefully) complement the ones you've locked, filling in the missing pieces.</p>
+                <p class="card-text mb-4">The "<strong>Save</strong>" and "<strong>Load</strong>" buttons let you save multiple projects, so you can play around with different configurations, or pick up where you left off.</p>
+                <p class="card-text mb-4">When you're ready to get cookin, just hit "<strong>Get recipe</strong>" and go to town.</p>
+                <h5 class="card-title">Enjoy! :-)</h5>
+            </div>
+        </div>
+        <div id='recipe-window' class="card shadow">
+            <div id='recipe-header' class="card-header">
+                Recipe
+                <button id='recipe-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
+            </div>
+            <div id='recipe-body' class="card-body">
+                <h5 class="card-title">Ingredients:</h5>
+                <ul id='ingredients-list'>
+                </ul>
+                <h5 class="card-title">Notes:</h5>
+                <p class="card-text mb-2">When it comes to salads, the big ideas (which I've shamelessly lifted from <em>Moosewood Cookbook</em>, Katzen 2014) are:</p>
+                <ul>
+                    <li>Use a big bowl, with plenty of room to toss.</li>
+                    <li>Use super fresh greens. Wash them thoroughly, and get them absolutely dry (a salad spinner and paper towels works well).</li>
+                    <li>Have extras chopped and ready to add when assembling. Veg should be in small pieces (clippings, shaings, gratings), other stuff can be whatever size sounds good. Seeds and nuts I'd recommend toasting (toss them on a skillet for a minute or two, no oil, until crunchy) and then cooling in the freezer, but this is optional.</li>
+                    <li>Dressing can be mixed on the side or added right in the bowl. Moosewood recommends bringing the pepper mill to the table (though I just mix it in), and also including some crushed garlic (which I'm too scared to do).</li>
+                </ul>
+                <h5 class="card-title">Instructions:</h5>
+                <ol>
+                    <li>Washing: remove less-than-fresh leaves and cut away any root areas. Place in a bowl of water and swish around, letting dirt settle to the bottem (though I think you could also place in a strainer and toss while running cold water through).</li>
+                    <li>Drying: If you have a salad spinner toss the greens and then spin them, then repeat for ~three cycles. Otherwise (or in addition to this), lay greens out on paper towels, then roll them up and shake them some + apply light pressure. Whether you spin or towel, it's a good idea to let the greens sit while you prep the rest, so they can drain further.</li>
+                    <li>Extras: If you want to toast nuts/seeds, do that first so they have time to cool in the freezer. Clip/shave/grate veg - however much sounds good (sometimes I take notes after the meal, so I can adjust in the future), and set aside. Cut fruit, crumble cheese, etc., and set aside.</li>
+                    <li>Dressing: If you plan on mixing in the bowl, set aside the oil, vinegar, salt and pepper. Otherwise, shake or stir it together, til the vinegar and oil doesn't immediately separate (if you have a dressing shaker/pourer, those are cool).</li>
+                    <li>Assembly: Place the greens in a large bowl. Add in the extras, while tossing, and then pour on the dressing, also while tossing (you can do it bit by bit). Optional: Moosewood suggests that you can add on a little extra oil at the end, to taste; also that you leave pepper up to guests; also that you add crushed garlic with the dressing, which is too weird for me. I <strong>do</strong> think it's a good idea to leave extra dressing out on the table.</li>
+                </ol>
+                <h5 class="card-title">Bon voyage :-)</h5>
+            </div>
+        </div>
+        <div id='main' class='row'>
+            <div id='controls' class='col-2 p-3 shadow'>
+                <div id='present'></div>
+                <button id='all' type="button" class="btn btn-secondary mt-3 mr-1">All</button>
+                <button id='none' type="button" class="btn btn-secondary mt-3">None</button><br>
+                <button id='save' type="button" class="btn btn-secondary mt-3 mr-1">Save</button>
+                <button id='load' type="button" class="btn btn-secondary mt-3">Load</button><br>
+                <button id='generate' type="button" class="btn btn-success mt-3">Generate salad</button><br>
+                <button id='recipe' type="button" class="btn btn-warning mt-3">Get recipe</button><br>
+                <button id='about' type="button" class="btn btn-primary mt-3">About</button>
+                <a id='stir-fry' class="btn btn-danger ml-3 mb-3" href="/stir-fry" role="button">Stir-fry mode</a>
+            </div>
+            <div id='network' class='col'></div>
+        </div>
+    </div>
+</body>
+</html>

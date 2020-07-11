@@ -1,0 +1,72 @@
+html, body {
+    margin: 0px;
+    height: 100%;
+}
+
+body {
+    overflow-y: hidden;
+}
+
+.container-fluid {
+    padding: 0px;
+}
+
+#main {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+#controls {
+    position: relative;
+    background-color: whitesmoke;
+    height: 100%;
+    padding: 0px;
+}
+
+.selectivity-multiple-input-container {
+    border: 1px solid black;
+    border-radius: 8px;
+    background-color: white;
+}
+
+#network {
+    padding: 0px;
+}
+
+#salad {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+}
+
+#about-window {
+    position: absolute;
+    display: none;
+    left: 12vw;
+    right: 12vw;
+    top: 10vh;
+    bottom: 15vh;
+    z-index: 1;
+    overflow-y: auto;
+}
+
+#generating {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    z-index: 1;
+}
+
+#recipe-window {
+    position: absolute;
+    display: none;
+    left: 100px;
+    right: 100px;
+    top: 100px;
+    bottom: 100px;
+    z-index: 1;
+    overflow-y: auto;
+}
