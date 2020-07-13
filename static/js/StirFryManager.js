@@ -11,27 +11,125 @@ var StirFryManager = function() {
             borderWidthSelected: 2,
             font: {
                 size: 12
-            }
+            },
+            title: ''
         },
         physics: {
             maxVelocity: 5
+        },
+        interaction: {
+            // hover: true,
+            tooltipDelay: 1200
+        },
+        edges: {
+            chosen: false
         }
     };
     self.network = new vis.Network(container, data, options);
 
     self.ingredients = [];
-    self.presentSet = new Set();
-    self.selectedSet = new Set();
-    self.lockedSet = new Set();
-    self.connectedSet = new Set();
+    // self.presentSet = new Set();
+    // self.selectedSet = new Set();
+    // self.lockedSet = new Set();
+    // self.connectedSet = new Set();
 
-    self.getFromId = function(id) {
-        var match = null;
+    self.getPresentSet = function() {
+        var presentSet = new Set();
         self.ingredients.forEach(function(ingredient) {
-            if (ingredient.id == id) match = ingredient;
+            if (ingredient.present) {
+                presentSet.add(ingredient);
+            }
         });
-        return match;
+        return presentSet;
     }
+
+    self.getSelectedSet = function() {
+        var selectedSet = new Set();
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.selected) {
+                selectedSet.add(ingredient);
+            }
+        });
+        return selectedSet;
+    }
+
+    self.getLockedSet = function() {
+        var lockedSet = new Set();
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.locked) {
+                lockedSet.add(ingredient);
+            }
+        });
+        return lockedSet;
+    }
+
+    self.getConnectedSet = function() {
+        var connectedSet = new Set();
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.connected) {
+                connectedSet.add(ingredient);
+            }
+        });
+        return connectedSet;
+    }
+
+    self.getPresentNames = function() {
+        var presentNames = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.present) {
+                presentNames.push(ingredient.name);
+            }
+        });
+        return presentNames;
+    }
+
+    self.getSelectedNames = function() {
+        var selectedNames = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.selected) {
+                selectedNames.push(ingredient.name);
+            }
+        });
+        return selectedNames;
+    }
+
+    self.getLockedNames = function() {
+        var lockedNames = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.locked) {
+                lockedNames.push(ingredient.name);
+            }
+        });
+        return lockedNames;
+    }
+
+    self.getConnectedNames = function() {
+        var connectedNames = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.connected) {
+                connectedNames.push(ingredient.name);
+            }
+        });
+        return connectedNames;
+    }
+
+    self.getHighlightedNames = function() {
+        var highlightedNames = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.highlighted) {
+                highlightedNames.push(ingredient.name);
+            }
+        });
+        return highlightedNames;
+    }
+
+    // self.getFromId = function(id) {
+    //     var match = null;
+    //     self.ingredients.forEach(function(ingredient) {
+    //         if (ingredient.id == id) match = ingredient;
+    //     });
+    //     return match;
+    // }
 
     self.getFromName = function(name) {
         var match = null;
@@ -49,14 +147,14 @@ var StirFryManager = function() {
         return names;
     }
 
-    self.getNamesFromSet = function(set) {
-        var ingredients = Array.from(set);
-        var names = [];
-        ingredients.forEach(function(ingredient) {
-            names.push(ingredient.name);
-        });
-        return names;
-    }
+    // self.getNamesFromSet = function(set) {
+    //     var ingredients = Array.from(set);
+    //     var names = [];
+    //     ingredients.forEach(function(ingredient) {
+    //         names.push(ingredient.name);
+    //     });
+    //     return names;
+    // }
 
     self.getIngredientsFromNames = function(names) {
         var ingredients = [];
@@ -92,10 +190,10 @@ var StirFryManager = function() {
         if (projectName != undefined) {
             console.log('SAVING TO LOCAL STORAGE');
             var data = {
-                presentArray: self.getNamesFromSet(self.presentSet),
-                selectedArray: self.getNamesFromSet(self.selectedSet),
-                lockedArray: self.getNamesFromSet(self.lockedSet),
-                connectedArray: self.getNamesFromSet(self.connectedSet)
+                presentArray: self.getPresentNames(),
+                selectedArray: self.getSelectedNames(),
+                lockedArray: self.getLockedNames(),
+                connectedArray: self.getConnectedNames()
             };
             self.saveToLocalStorage(projectName, data);
 
@@ -115,20 +213,54 @@ var StirFryManager = function() {
             console.log('LOADING FROM LOCAL STORAGE', projectName);
             if (self.existsInLocalStorage(projectName)) {
                 data = self.getFromLocalStorage(projectName);
-                self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
-                self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
-                self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
-                self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
+                var presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
+                var selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
+                var lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
+                var connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
                 self.ingredients.forEach(function(ingredient) {
-                    ingredient.present = self.presentSet.has(ingredient);
-                    ingredient.selected = self.selectedSet.has(ingredient);
-                    ingredient.locked = self.lockedSet.has(ingredient);
-                    ingredient.connected = self.connectedSet.has(ingredient)
+                    ingredient.present = presentSet.has(ingredient);
+                    ingredient.selected = selectedSet.has(ingredient);
+                    ingredient.locked = lockedSet.has(ingredient);
+                    ingredient.connected = connectedSet.has(ingredient)
                     ingredient.render();
                 });
             } else {
                 console.log('no data found in localStorage')
             }
+        }
+    }
+
+    // unintuitive, needs refactoring
+    self.highlightMatches = function(query) {
+        var highlighted = [];
+        self.ingredients.forEach(function(ingredient) {
+            if (ingredient.present) {
+                if (ingredient.name.toLowerCase().includes(query.toLowerCase()) && query != '') { // should be highlighted
+                    if (!ingredient.highlighted) {
+                        ingredient.highlighted = true;
+                        ingredient.render();
+                    }
+                } else { // shouldn't be highlighted
+                    if (ingredient.highlighted) {
+                        ingredient.highlighted = false;
+                        ingredient.render();
+                    }
+                }
+            }
+        });
+        var highlightedNames = self.getHighlightedNames();
+        // console.log(highlightedNames);
+        if (highlightedNames.length > 0) {
+            console.log('long enough', highlightedNames.length, highlightedNames[0])
+            console.log(self.nodes.getIds()[0])
+            self.network.fit({
+                nodes: highlightedNames,
+                // animation: {
+                //     duration: 300
+                // }
+                animation: true
+            });
+            // self.network.fit(highlightedNames);
         }
     }
 
@@ -153,9 +285,9 @@ var StirFryManager = function() {
             ingredients.forEach(function(ingredient) {
                 var stirFryIngredient = new StirFryIngredient(self, ingredient);
                 self.ingredients.push(stirFryIngredient);
-                self.presentSet.add(stirFryIngredient);
+                // self.presentSet.add(stirFryIngredient);
             });
-        }).then(function() {
+
             $('#present').selectivity({
                 items: self.getIngredientNames(),
                 multiple: true,
@@ -164,18 +296,50 @@ var StirFryManager = function() {
             });
 
             $('#present').on('change', function(event) {
+                var selectivityContainer = $('.selectivity-multiple-input-container')
+                selectivityContainer.scrollTop(selectivityContainer.prop("scrollHeight"));
+                $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
+
                 if (event.added && typeof(event.added) == 'object') {
                     var ingredient = self.getFromName(event.added.id);
                     ingredient.present = true;
-                    self.presentSet.add(ingredient);
+                    // self.presentSet.add(ingredient);
                     ingredient.render();
                 } else if (event.removed && typeof(event.removed) == 'object') {
+                    console.log('should be removing')
                     var ingredient = self.getFromName(event.removed.id);
+                    console.log(ingredient.name)
                     ingredient.clear();
-                    ingredient.render();
                 }
             });
-        }).then(function() { // idk if this is set up right, the way render is an alternative to load
+
+            // kludge-y
+            // couldn't get event to fire when selectivity input changed directly
+            $('.selectivity-multiple-input').keyup(function(event) {
+                var query = $('.selectivity-multiple-input').val();
+                self.highlightMatches(query);
+            });
+
+            // SUUUPER kludge-y, not gonna even explain
+            var selectivityInput = $('.selectivity-multiple-input').first();
+            selectivityInput.addClass('form-control');
+            selectivityInput.addClass('mt-3');
+
+            selectivityInput.css({
+                // border: '1px solid #CED4DA',
+                border: '1px solid #6C757D',
+                // borderTopLeftRadius: '0px',
+                // borderTopRightRadius: '0px',
+                // borderBottomLeftRadius: '8px',
+                // borderBottomRightRadius: '8px',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                position: 'absolute',
+                bottom: '0px',
+                right: '0px',
+                left: '0px'
+            })
+
             if (self.existsInLocalStorage('')) {
                 console.log('CACHE FOUND');
                 self.loadProjectFromLocalStorage('');
@@ -189,51 +353,70 @@ var StirFryManager = function() {
         });
     };
 
+
     self.clickTimeout = null;
 
+    self.toggleSelect = function(ingredient) {
+        if (ingredient.selected) {
+            if (ingredient.locked) {
+                ingredient.locked = false;
+                // self.lockedSet.delete(ingredient);
+            }
+            ingredient.selected = false;
+            // self.selectedSet.delete(ingredient);
+        } else {
+            ingredient.selected = true;
+            // self.selectedSet.add(ingredient);
+        }
+        ingredient.render();
+        self.saveProjectToLocalStorage('');
+    }
+
+    // $('#present').on('selectivity-open', function() {
+    //     $('.selectivity-dropdown').first().appendTo($('#present-input-wrapper'));
+    //     console.log('heyheyheyhey')
+    // })
+
     self.network.on('click', function(properties) {
+        $('#present').selectivity('close');
+        $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
+        $(document.activeElement).blur()
+        var value = $('input').val()
+        // console.log(value)
+        // $('input').change(function() {
+        //     console.log('hey')
+        // })
         if (self.clickTimeout) {
             clearTimeout(self.clickTimeout);
             self.clickTimeout = null;
         } else {
             self.clickTimeout = setTimeout(function() {
                 if (properties.nodes.length > 0) {
-                    var ingredient = self.getFromId(properties.nodes[0]);
-                    if (ingredient.selected) {
-                        if (ingredient.locked) {
-                            ingredient.locked = false;
-                            self.lockedSet.delete(ingredient);
-                        }
-                        ingredient.selected = false;
-                        self.selectedSet.delete(ingredient);
-                    } else {
-                        ingredient.selected = true;
-                        self.selectedSet.add(ingredient);
-                    }
-                    ingredient.render();
-                    self.saveProjectToLocalStorage('');
+                    var ingredient = self.getFromName(properties.nodes[0]);
+                    self.toggleSelect(ingredient);
                 }
                 self.clickTimeout = null;
             }, 250);
         }
     });
 
+    self.toggleLock = function(ingredient) {
+        if (!ingredient.selected) {
+            ingredient.selected = true;
+        }
+        if (ingredient.locked) {
+            ingredient.locked = false;
+        } else {
+            ingredient.locked = true;
+        }
+        ingredient.render()
+            self.saveProjectToLocalStorage('');
+    }
+
     self.network.on('doubleClick', function(properties) {
         if (properties.nodes.length > 0) {
-            var ingredient = self.getFromId(properties.nodes[0]);
-            if (!ingredient.selected) {
-                ingredient.selected = true;
-                self.selectedSet.add(ingredient);
-            }
-            if (ingredient.locked) {
-                ingredient.locked = false;
-                self.lockedSet.delete(ingredient)
-            } else {
-                ingredient.locked = true;
-                self.lockedSet.add(ingredient)
-            }
-            ingredient.render()
-            self.saveProjectToLocalStorage('');
+            var ingredient = self.getFromName(properties.nodes[0]);
+            self.toggleLock(ingredient);
         }
     });
 
@@ -241,20 +424,158 @@ var StirFryManager = function() {
         return false;
     });
 
+    self.toggleConnect = function(ingredient) {
+        if (ingredient.connected) {
+            ingredient.connected = false;
+            // self.connectedSet.delete(ingredient);
+        } else {
+            ingredient.connected = true;
+            // self.connectedSet.add(ingredient);
+        }
+        ingredient.render();
+            self.saveProjectToLocalStorage('');
+    }
+
     self.network.on('oncontext', function(properties) {
         var id = self.network.getNodeAt({x: properties.pointer.DOM.x, y: properties.pointer.DOM.y});
         if (id != undefined) {
-            var ingredient = self.getFromId(id);
-            if (ingredient.connected) {
-                ingredient.connected = false;
-                self.connectedSet.delete(ingredient);
-            } else {
-                ingredient.connected = true;
-                self.connectedSet.add(ingredient);
-            }
-            ingredient.render();
-            self.saveProjectToLocalStorage('');
+            var ingredient = self.getFromName(id);
+            self.toggleConnect(ingredient);
         }
+    });
+
+// WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY OVERCOMPLICATED
+// When I designed this section I thought the menu would be elsewhere, and the mouse would need time to get there
+// If I were to re-do it I'd just make an invisible div appear over the mouse and including a menu to the right, that'd hide when the mouse left it.
+    self.menuId = null;
+    self.endMenuTimeout = null;
+    self.mouseOnNode = false;
+
+    self.renderMenuButtons = function() {
+        var ingredient = self.getFromName(self.menuId);
+        if (ingredient.selected) {
+            $('#select').removeClass('btn-primary');
+            $('#select').addClass('btn-light');
+            $('#select').text('Unselect');
+        } else {
+            $('#select').removeClass('btn-light');
+            $('#select').addClass('btn-primary');
+            $('#select').text('Select');
+        }
+        if (ingredient.locked) {
+            $('#lock').removeClass('btn-primary');
+            $('#lock').addClass('btn-light');
+            $('#lock').text('Unlock');
+        } else {
+            $('#lock').removeClass('btn-light');
+            $('#lock').addClass('btn-primary');
+            $('#lock').text('Lock');
+        }
+        if (ingredient.connected) {
+            $('#connect').removeClass('btn-primary');
+            $('#connect').addClass('btn-light');
+            $('#connect').text('Unconnect');
+        } else {
+            $('#connect').removeClass('btn-light');
+            $('#connect').addClass('btn-primary');
+            $('#connect').text('Connect');
+        }
+    }
+
+    $('#remove').click(function() {
+        var ingredient = self.getFromName(self.menuId);
+        self.endMenu();
+        ingredient.clear();
+        self.saveProjectToLocalStorage('');
+    })
+
+    $('#select').click(function() {
+        var ingredient = self.getFromName(self.menuId);
+        self.toggleSelect(ingredient);
+        self.renderMenuButtons();
+    });
+
+    $('#lock').click(function() {
+        var ingredient = self.getFromName(self.menuId);
+        self.toggleLock(ingredient);
+        self.renderMenuButtons();
+    })
+
+    $('#connect').click(function() {
+        var ingredient = self.getFromName(self.menuId);
+        self.toggleConnect(ingredient);
+        self.renderMenuButtons();
+    });
+
+    self.startMenu = function(menuId) {
+        self.menuId = menuId;
+        var ingredient = self.getFromName(self.menuId);
+        ingredient.menu = true;
+        var canvasPosition = self.network.getPositions(menuId)[menuId];
+        var domPosition = self.network.canvasToDOM(canvasPosition);
+        $('#menu-wrapper').css({
+            top: domPosition.y,
+            left: domPosition.x
+        })
+        self.renderMenuButtons();
+        $('#menu-wrapper').show();
+        self.network.selectNodes([menuId]);
+        self.getFromName(self.menuId).render();
+    }
+
+    self.endMenu = function() {
+        self.network.unselectAll();
+        if (self.menuId) {
+            var ingredient = self.getFromName(self.menuId);
+            // console.log(ingredient, self.menuId)
+            var size = self.nodes.get(self.menuId).size - 5;
+            self.nodes.update({
+                id: self.menuId,
+                size: size
+            });
+            ingredient.menu = false;
+            ingredient.render();
+            self.menuId = null;
+        }
+        $('#menu-wrapper').hide();
+        $('#menu-wrapper').css({
+            left: 0,
+            top: 0
+        })
+    }
+
+    self.network.on('showPopup', function(menuId) {
+        self.mouseOnNode = true;
+
+        if (self.endMenuTimeout) { // either because mouse has returned to hoverNode, or because mouse is at a new node and the old is to be dehovered
+            clearTimeout(self.endMenuTimeout);
+        }
+        if (self.menuId && self.menuId != menuId) {
+            self.endMenu();
+        }
+        if (self.menuId != menuId) {
+            self.startMenu(menuId);
+        }
+        console.log(self.getFromName(menuId).name);
+    });
+
+    self.network.on('hidePopup', function() {
+        if (self.mouseOnNode) {
+            self.mouseOnNode = false;
+            self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
+                self.endMenu();
+                self.endMenuTimeout = null;
+            }, 300); // how long it takes menu to disappear
+        }
+    });
+
+    $('#menu-wrapper').hover(function() {
+        if (self.endMenuTimeout) {
+            clearTimeout(self.endMenuTimeout);
+            self.endMenuTimeout = null;
+        }
+    }, function() {
+        self.endMenu();
     });
 
     $('#save').click(function() {
@@ -335,7 +656,6 @@ var StirFryManager = function() {
         if (confirmation == 'y') {
             self.ingredients.forEach(function(ingredient) {
                 ingredient.clear();
-                ingredient.render();
             });
             self.saveProjectToLocalStorage('');
         }
@@ -344,8 +664,11 @@ var StirFryManager = function() {
     self.generating = false;
 
     self.generate = function() {
+        // console.log('tryna generate', self.generating);
         if (!self.generating) {
+            self.generating = true;
             $('#generating').show();
+            console.log('len present names', self.getPresentNames().length);
             fetch('/generate-stir-fry', {
                 method: 'post',
                 headers: {
@@ -353,8 +676,8 @@ var StirFryManager = function() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    present: self.getNamesFromSet(self.presentSet),
-                    locked: self.getNamesFromSet(self.lockedSet)
+                    present: self.getPresentNames(),
+                    locked: self.getLockedNames()
                 })
             }).then(function(response) {
                 if (!response.ok) {
@@ -377,13 +700,13 @@ var StirFryManager = function() {
                 self.ingredients.forEach(function(ingredient) {
                     if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
                         ingredient.present = true;
-                        self.presentSet.add(ingredient);
+                        self.getPresentSet().add(ingredient);
                     } // no else clause, as I don't want to remove any ingredients added since the request was sent
                     ingredient.selected = selectedNamesSet.has(ingredient.name);
                     ingredient.locked = lockedNamesSet.has(ingredient.name);
                 });
-                self.selectedSet = new Set(self.getIngredientsFromNames(selectedNames));
-                self.lockedSet = new Set(self.getIngredientsFromNames(lockedNames));
+                // self.selectedSet = new Set(self.getIngredientsFromNames(selectedNames));
+                // self.lockedSet = new Set(self.getIngredientsFromNames(lockedNames));
 
                 self.ingredients.forEach(function(ingredient) {
                     ingredient.render();
@@ -408,8 +731,13 @@ var StirFryManager = function() {
     });
 
     $('body').keydown(function(event){
-        if (event.keyCode == 32) {
-            $(document.activeElement).blur();
+        var spacebar = event.keyCode == 32;
+        var activeElement = $(document.activeElement);
+        var searching = activeElement.hasClass('selectivity-multiple-input');
+        var emptySearch = $('.selectivity-multiple-input').val() == '';
+        if (spacebar && (!searching || emptySearch)) {
+            $('#present').selectivity('close');
+            activeElement.blur()
             self.generate();
         }
     });
@@ -425,7 +753,7 @@ var StirFryManager = function() {
         var lateFlavoringNames = [];
         var flavoringNames = [];
 
-        self.selectedSet.forEach(function(ingredient) {
+        self.getSelectedSet().forEach(function(ingredient) {
             console.log('ingredient', ingredient.name)
             if (ingredient.data.stir_fry_early == 'y') {
                 if (ingredient.data.stir_fry_mid == 'y') {
@@ -459,30 +787,30 @@ var StirFryManager = function() {
         });
 
         var html = '';
-        if (Array.from(self.selectedSet).length > 1) {
+        if (Array.from(self.getSelectedSet()).length > 1) {
             earlyNames.forEach(function(name) {
                 html += '<li>[early] ' + name + '</li>';
             });
             earlyMidNames.forEach(function(name) {
-                html += '<li>[early-mid] ' + name + '</li>';
+                html += '<li>[early or mid] ' + name + '</li>';
             });
             earlyMidLateNames.forEach(function(name) {
-                html += '<li>[early-mid-late] ' + name + '</li>';
+                html += '<li>[early or mid or late] ' + name + '</li>';
             });
             midNames.forEach(function(name) {
                 html += '<li>[mid] ' + name + '</li>';
             });
             midLateNames.forEach(function(name) {
-                html += '<li>[mid-late] ' + name + '</li>';
+                html += '<li>[mid or late] ' + name + '</li>';
             });
             midLateFlavoringNames.forEach(function(name) {
-                html += '<li>[mid-late-flavoring] ' + name + '</li>';
+                html += '<li>[mid or late or flavoring] ' + name + '</li>';
             });
             lateNames.forEach(function(name) {
                 html += '<li>[late] ' + name + '</li>';
             });
             lateFlavoringNames.forEach(function(name) {
-                html += '<li>[late-flavoring] ' + name + '</li>';
+                html += '<li>[late or flavoring] ' + name + '</li>';
             });
             flavoringNames.forEach(function(name) {
                 html += '<li>[flavoring] ' + name + '</li>';

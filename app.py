@@ -332,20 +332,20 @@ def generate_stir_fry():
         flavor_balance_score = 5 / (1 + abs(1-sweet_score) + abs(1-salty_score) + abs(1-sour_score) + abs(1-savory_score) + abs(1-spicy_score)) - .9
         score += flavor_balance_score
 
-    # will bias toward larger stir_frys, slightly
-    # PROTEIN BONUS =========================================================================================
-    # ranges from roughly (0 to 1) * .5 (mostly balanced on its own)
-        n_protein = (selected_ingredients['stir_fry_protein'] == 'y').sum()
-
-        # /2 for steep diminishing returns (?)
-        protein_score = (n_protein/2)**.5 * .75
-        score += protein_score * .5
+    # # will bias toward larger stir_frys, slightly
+    # # PROTEIN BONUS =========================================================================================
+    # # ranges from roughly (0 to 1) * .5 (mostly balanced on its own)
+    #     n_protein = (selected_ingredients['stir_fry_protein'] == 'y').sum()
+    #
+    #     # /2 for steep diminishing returns (?)
+    #     protein_score = (n_protein/2)**.5 * .75
+    #     score += protein_score * .5
 
         if score > top_score:
             top_selected_ingredients = selected_ingredients
             top_pairing_bonus = average_shortest_path_score
             top_flavor_balance_bonus = flavor_balance_score
-            top_protein_bonus = protein_score
+            # top_protein_bonus = protein_score
             top_score = score
 
     data = {
@@ -355,7 +355,7 @@ def generate_stir_fry():
         'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
         'pairing_bonus': top_pairing_bonus,
         'flavor_balance_bonus': top_flavor_balance_bonus,
-        'protein_bonus': top_protein_bonus,
+        # 'protein_bonus': top_protein_bonus,
         'score': top_score
     }
     return jsonify(data)

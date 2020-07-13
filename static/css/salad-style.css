@@ -29,6 +29,7 @@ body {
     border: 1px solid black;
     border-radius: 8px;
     background-color: white;
+    max-height: 50vh;
 }
 
 #network {
@@ -37,7 +38,7 @@ body {
 
 #stir-fry {
     position: absolute;
-    left: 0px;
+    right: 0px;
     bottom: 0px;
 }
 
