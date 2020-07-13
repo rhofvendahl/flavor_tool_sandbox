@@ -12,7 +12,7 @@ stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_fla
 
 @app.route('/')
 def root():
-    return redirect(url_for('salad_index'))
+    return redirect(url_for('stir_fry_index'))
 
 @app.route('/salad')
 def salad_index():
