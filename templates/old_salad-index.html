@@ -30,42 +30,28 @@
                 <button id='about-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
             </div>
             <div class="card-body">
-                <h3 class='card-title mb-3'>Welcome to the Flavor Tool</h3>
-                <h5 class="card-title">Selecting ingredients</h5>
-                <ul class='mb-3'>
-                    <li>Each circle represents an ingredient that could go in your salad. The ingredients are color-coded:</li>
-                    <ul>
-                        <li><span id='green'>green</span>=vegetable</li>
-                        <li><span id='orange'>orange</span>=fruit</li>
-                        <li><span id='brown'>brown</span>=protein</li>
-                        <li><span id='tan'>tan</span>=grain</li>
-                        <li><span id='grey'>grey</span>=other</li>
-                    </ul>
-                    <p class="card-text mb-2">There are three ways to manipulate these ingredients:</p>
-                    <ol>
-                        <li><strong>Click to select</strong> an ingredient, marking it to include in the salad. Click again to de-select.</li>
-                        <li><strong>Double click to lock</strong> an ingredient. If you auto-generate a salad, these ingredients will be used as a base. Double click again to unlock.</li>
-                        <li><strong>Right click</strong> an ingredient to show which other ingredients <strong>pair with</strong> it. Black lines are strong pairs, grey lines are weaker.</li>
-                    </ol>
-                    <li>Mark ingredients to include by hovering over an ingredient and pressing 'select' (or clicking).</li>
-                    <li>You can mark the ingredients you for <em>sure</em> want by pressing 'lock' (or double-clicking).</li>
-                    <li>To see which ingredients pair well together, try pressing 'connect' (or right-clicking).</li>
-                    <ul>
-                        <li><span id='black'>black</span>=strong pair</li>
-                        <li><span id='grey'>grey</span>=weaker pair</li>
-                        <li><span id='red'>red</span>=clashing pair</li>
-                    </ul>
+                <h5 class="card-title mb-4">Welcome to the Flavor Tool!</h5>
+                <p class="card-text mb-4">The top left box lists all currently present ingredients. To add an ingredient, just search and click (or press enter); to remove an ingredient press the "X" (or backspace). You can use the "all" and "none" buttons to add or remove in bulk.</p>
+                <p class="card-text mb-2">The main window displays each present ingredient as a color-coded node:</p>
+                <ul>
+                    <li>light green=leafy green</li>
+                    <li>green=vegetable</li>
+                    <li>orange=fruit</li>
+                    <li>brown=nut or seed</li>
+                    <li>tan=dressing component</li>
+                    <li>grey=other</li>
                 </ul>
-                <h5 class="card-title">Generating recipes</h5>
-                <ul class='mb-3'>
-                    <li>Once you've selected some ingredients and locked the ones you for sure want to include, try pressing 'generate' (or hitting spacebar).</li>
-                    <li>The generator draws on pairings and other data* to select a handful of ingredients that might go well together.</li>
-                    <li>If you like a generated recipe but want to keep playing around, the 'save' and 'load' buttons will let you save and switch between projects.</li>
-                    <li>When you're ready to get cooking, just hit 'Get recipe' to plug the selected ingredients into a template** for cooking tasty stir-frys.</li>
-                </ul>
-                <h3 class="card-title mb-4">Enjoy! :-)</h3>
-                <p class='card-text mb-0'>*gratefully gathered from <em>The Vegetarian Flavor Bible</em> (Page, 2014)</p>
-                <p class='card-text'>**shamelessly adapted from <em>Tassajara Cooking</em> (Brown, 1974)</p>
+                <p class="card-text mb-2">There are three ways to manipulate these ingredients:</p>
+                <ol>
+                    <li><strong>Click to select</strong> an ingredient, marking it to include in the salad. Click again to de-select.</li>
+                    <li><strong>Double click to lock</strong> an ingredient. If you auto-generate a salad, these ingredients will be used as a base. Double click again to unlock.</li>
+                    <li><strong>Right click</strong> an ingredient to show which other ingredients <strong>pair with</strong> it. Black lines are strong pairs, grey lines are weaker.</li>
+                </ol>
+                <p class="card-text mb-4">Selected ingredients that pair well together will be connected with a solid line (black for strong, grey for weak), while selected ingredients that clash will be marked with a red line (lighter red for minor clash).</p>
+                <p class="card-text mb-4">When you've selected a set of ingredients you like, try locking them and pressing "<strong>Generate</strong>", on the left (or spacebar). This will draw on a bunch of flavor data (mostly gathered from <em>The Vegetarian Flavor Bible</em>, Page 2014) to select some other ingredients that (hopefully) complement the ones you've locked, filling in the missing pieces.</p>
+                <p class="card-text mb-4">The "<strong>Save</strong>" and "<strong>Load</strong>" buttons let you save multiple projects, so you can play around with different configurations, or pick up where you left off.</p>
+                <p class="card-text mb-4">When you're ready to get cookin, just hit "<strong>Get recipe</strong>" and go to town.</p>
+                <h5 class="card-title">Enjoy! :-)</h5>
             </div>
         </div>
         <div id='recipe-window' class="card shadow">
@@ -105,20 +91,10 @@
                 <button id='load' type="button" class="btn btn-secondary mt-3">Load</button><br>
                 <button id='generate' type="button" class="btn btn-success mt-3">Generate salad</button><br>
                 <button id='recipe' type="button" class="btn btn-warning mt-3">Get recipe</button><br>
-                <button id='about' type="button" class="btn btn-secondary mt-3">About</button>
+                <button id='about' type="button" class="btn btn-primary mt-3">About</button>
                 <a id='stir-fry' class="btn btn-danger mr-3 mb-3" href="/stir-fry" role="button">Stir-fry mode</a>
             </div>
-            <div id='not-controls' class='col'>
-                <div id='menu-wrapper'>
-                    <div id='menu'>
-                        <p><button id='remove' type="button" class="btn btn-primary shadow">Remove</button></p>
-                        <p><button id='select' type="button" class="btn btn-primary shadow">Select</button></p>
-                        <p><button id='lock' type="button" class="btn btn-primary shadow">Lock</button></p>
-                        <p><button id='connect' type="button" class="btn btn-primary shadow">Connect</button></p>
-                    </div>
-                </div>
-                <div id='network'></div>
-            </div>
+            <div id='network' class='col'></div>
         </div>
     </div>
 </body>

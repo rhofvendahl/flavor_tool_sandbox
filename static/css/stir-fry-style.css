@@ -27,11 +27,9 @@ body {
 
 #present{
     position: relative;
-    border-radius
 }
 
 .selectivity-multiple-input-container {
-    /* position: relative; */
     border: 1px solid #6C757D;
     border-radius: 8px;
     background-color: white;
@@ -71,7 +69,6 @@ body {
     left: 20vw;
     right: 20vw;
     top: 10vh;
-    /* bottom: 15vh; */
     z-index: 1;
     overflow-y: auto;
 }
@@ -118,7 +115,5 @@ body {
 }
 
 .vis-tooltip {
-    /* display: none; */
-    /* visibility: visible; */
     display: none;
 }

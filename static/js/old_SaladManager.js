@@ -11,111 +11,26 @@ var SaladManager = function() {
             borderWidthSelected: 2,
             font: {
                 size: 12
-            },
-            title: ''
+            }
         },
         physics: {
             maxVelocity: 5
-        },
-        interaction: {
-            tooltipDelay: 1200
-        },
-        edges: {
-            chosen: false
         }
     };
     self.network = new vis.Network(container, data, options);
 
     self.ingredients = [];
+    self.presentSet = new Set();
+    self.selectedSet = new Set();
+    self.lockedSet = new Set();
+    self.connectedSet = new Set();
 
-    self.getPresentSet = function() {
-        var presentSet = new Set();
+    self.getFromId = function(id) {
+        var match = null;
         self.ingredients.forEach(function(ingredient) {
-            if (ingredient.present) {
-                presentSet.add(ingredient);
-            }
+            if (ingredient.id == id) match = ingredient;
         });
-        return presentSet;
-    }
-
-    self.getSelectedSet = function() {
-        var selectedSet = new Set();
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.selected) {
-                selectedSet.add(ingredient);
-            }
-        });
-        return selectedSet;
-    }
-
-    self.getLockedSet = function() {
-        var lockedSet = new Set();
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.locked) {
-                lockedSet.add(ingredient);
-            }
-        });
-        return lockedSet;
-    }
-
-    self.getConnectedSet = function() {
-        var connectedSet = new Set();
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.connected) {
-                connectedSet.add(ingredient);
-            }
-        });
-        return connectedSet;
-    }
-
-    self.getPresentNames = function() {
-        var presentNames = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.present) {
-                presentNames.push(ingredient.name);
-            }
-        });
-        return presentNames;
-    }
-
-    self.getSelectedNames = function() {
-        var selectedNames = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.selected) {
-                selectedNames.push(ingredient.name);
-            }
-        });
-        return selectedNames;
-    }
-
-    self.getLockedNames = function() {
-        var lockedNames = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.locked) {
-                lockedNames.push(ingredient.name);
-            }
-        });
-        return lockedNames;
-    }
-
-    self.getConnectedNames = function() {
-        var connectedNames = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.connected) {
-                connectedNames.push(ingredient.name);
-            }
-        });
-        return connectedNames;
-    }
-
-    self.getHighlightedNames = function() {
-        var highlightedNames = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.highlighted) {
-                highlightedNames.push(ingredient.name);
-            }
-        });
-        return highlightedNames;
+        return match;
     }
 
     self.getFromName = function(name) {
@@ -129,6 +44,15 @@ var SaladManager = function() {
     self.getIngredientNames = function() {
         var names = [];
         self.ingredients.forEach(function(ingredient) {
+            names.push(ingredient.name);
+        });
+        return names;
+    }
+
+    self.getNamesFromSet = function(set) {
+        var ingredients = Array.from(set);
+        var names = [];
+        ingredients.forEach(function(ingredient) {
             names.push(ingredient.name);
         });
         return names;
@@ -168,12 +92,11 @@ var SaladManager = function() {
         if (projectName != undefined) {
             console.log('SAVING TO LOCAL STORAGE');
             var data = {
-                presentArray: self.getPresentNames(),
-                selectedArray: self.getSelectedNames(),
-                lockedArray: self.getLockedNames(),
-                connectedArray: self.getConnectedNames()
+                presentArray: self.getNamesFromSet(self.presentSet),
+                selectedArray: self.getNamesFromSet(self.selectedSet),
+                lockedArray: self.getNamesFromSet(self.lockedSet),
+                connectedArray: self.getNamesFromSet(self.connectedSet)
             };
-
             self.saveToLocalStorage(projectName, data);
 
             var projectNamesSet;
@@ -192,52 +115,20 @@ var SaladManager = function() {
             console.log('LOADING FROM LOCAL STORAGE', projectName);
             if (self.existsInLocalStorage(projectName)) {
                 data = self.getFromLocalStorage(projectName);
-                var presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
-                var selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
-                var lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
-                var connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
+                self.presentSet = new Set(self.getIngredientsFromNames(data.presentArray));
+                self.selectedSet = new Set(self.getIngredientsFromNames(data.selectedArray));
+                self.lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
+                self.connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
                 self.ingredients.forEach(function(ingredient) {
-                    if (presentSet.has(ingredient)) {
-                        ingredient.add({
-                            selected: selectedSet.has(ingredient),
-                            locked: lockedSet.has(ingredient),
-                            connected: connectedSet.has(ingredient)
-                        });
-                    } else {
-                        ingredient.clear();
-                    }
+                    ingredient.present = self.presentSet.has(ingredient);
+                    ingredient.selected = self.selectedSet.has(ingredient);
+                    ingredient.locked = self.lockedSet.has(ingredient);
+                    ingredient.connected = self.connectedSet.has(ingredient)
+                    ingredient.render();
                 });
             } else {
                 console.log('no data found in localStorage')
             }
-        }
-    }
-
-    // unintuitive, needs refactoring
-    self.highlightMatches = function(query) {
-        var highlighted = [];
-        self.ingredients.forEach(function(ingredient) {
-            if (ingredient.present) {
-                if (ingredient.name.toLowerCase().includes(query.toLowerCase()) && query != '') { // should be highlighted
-                    if (!ingredient.highlighted) {
-                        ingredient.highlighted = true;
-                        ingredient.render();
-                    }
-                } else { // shouldn't be highlighted
-                    if (ingredient.highlighted) {
-                        ingredient.highlighted = false;
-                        ingredient.render();
-                    }
-                }
-            }
-        });
-        var highlightedNames = self.getHighlightedNames();
-        if (highlightedNames.length > 0) {
-            console.log(self.nodes.getIds()[0])
-            self.network.fit({
-                nodes: highlightedNames,
-                animation: true
-            });
         }
     }
 
@@ -261,6 +152,7 @@ var SaladManager = function() {
             ingredients.forEach(function(ingredient) {
                 var saladIngredient = new SaladIngredient(self, ingredient);
                 self.ingredients.push(saladIngredient);
+                self.presentSet.add(saladIngredient);
             });
 
             $('#present').selectivity({
@@ -271,48 +163,24 @@ var SaladManager = function() {
             });
 
             $('#present').on('change', function(event) {
-                var selectivityContainer = $('.selectivity-multiple-input-container')
-                selectivityContainer.scrollTop(selectivityContainer.prop("scrollHeight"));
-                $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
-
                 if (event.added && typeof(event.added) == 'object') {
                     var ingredient = self.getFromName(event.added.id);
-                    ingredient.add();
+                    ingredient.present = true;
+                    self.presentSet.add(ingredient);
                     ingredient.render();
                 } else if (event.removed && typeof(event.removed) == 'object') {
                     var ingredient = self.getFromName(event.removed.id);
                     ingredient.clear();
+                    ingredient.render();
                 }
             });
-
-            // kludge-y
-            // couldn't get event to fire when selectivity input changed directly
-            $('.selectivity-multiple-input').keyup(function(event) {
-                var query = $('.selectivity-multiple-input').val();
-                self.highlightMatches(query);
-            });
-
-            // SUUUPER kludge-y, not gonna even explain
-            var selectivityInput = $('.selectivity-multiple-input').first();
-            selectivityInput.addClass('form-control');
-            selectivityInput.addClass('mt-3');
-
-            selectivityInput.css({
-                border: '1px solid #6C757D',
-                borderRadius: '8px',
-                backgroundColor: 'white',
-                position: 'absolute',
-                bottom: '0px',
-                right: '0px',
-                left: '0px'
-            })
 
             if (self.existsInLocalStorage('')) {
                 console.log('CACHE FOUND');
                 self.loadProjectFromLocalStorage('');
             } else {
                 self.ingredients.forEach(function(ingredient) {
-                    ingredient.add();
+                    ingredient.render();
                 });
             }
         }).catch(function(error) {
@@ -322,55 +190,49 @@ var SaladManager = function() {
 
     self.clickTimeout = null;
 
-    self.toggleSelect = function(ingredient) {
-        if (ingredient.selected) {
-            if (ingredient.locked) {
-                ingredient.locked = false;
-            }
-            ingredient.selected = false;
-        } else {
-            ingredient.selected = true;
-        }
-        ingredient.render();
-        self.saveProjectToLocalStorage('');
-    }
-
     self.network.on('click', function(properties) {
-        $('#present').selectivity('close');
-        $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
-        $(document.activeElement).blur()
-
         if (self.clickTimeout) {
             clearTimeout(self.clickTimeout);
             self.clickTimeout = null;
         } else {
             self.clickTimeout = setTimeout(function() {
                 if (properties.nodes.length > 0) {
-                    var ingredient = self.getFromName(properties.nodes[0]);
-                    self.toggleSelect(ingredient);
+                    var ingredient = self.getFromId(properties.nodes[0]);
+                    if (ingredient.selected) {
+                        if (ingredient.locked) {
+                            ingredient.locked = false;
+                            self.lockedSet.delete(ingredient);
+                        }
+                        ingredient.selected = false;
+                        self.selectedSet.delete(ingredient);
+                    } else {
+                        ingredient.selected = true;
+                        self.selectedSet.add(ingredient);
+                    }
+                    ingredient.render();
+                    self.saveProjectToLocalStorage('');
                 }
                 self.clickTimeout = null;
             }, 250);
         }
     });
 
-    self.toggleLock = function(ingredient) {
-        if (!ingredient.selected) {
-            ingredient.selected = true;
-        }
-        if (ingredient.locked) {
-            ingredient.locked = false;
-        } else {
-            ingredient.locked = true;
-        }
-        ingredient.render()
-            self.saveProjectToLocalStorage('');
-    }
-
     self.network.on('doubleClick', function(properties) {
         if (properties.nodes.length > 0) {
-            var ingredient = self.getFromName(properties.nodes[0]);
-            self.toggleLock(ingredient);
+            var ingredient = self.getFromId(properties.nodes[0]);
+            if (!ingredient.selected) {
+                ingredient.selected = true;
+                self.selectedSet.add(ingredient);
+            }
+            if (ingredient.locked) {
+                ingredient.locked = false;
+                self.lockedSet.delete(ingredient)
+            } else {
+                ingredient.locked = true;
+                self.lockedSet.add(ingredient)
+            }
+            ingredient.render()
+            self.saveProjectToLocalStorage('');
         }
     });
 
@@ -378,154 +240,20 @@ var SaladManager = function() {
         return false;
     });
 
-    self.toggleConnect = function(ingredient) {
-        if (ingredient.connected) {
-            ingredient.connected = false;
-        } else {
-            ingredient.connected = true;
-        }
-        ingredient.render();
-            self.saveProjectToLocalStorage('');
-    }
-
     self.network.on('oncontext', function(properties) {
         var id = self.network.getNodeAt({x: properties.pointer.DOM.x, y: properties.pointer.DOM.y});
         if (id != undefined) {
-            var ingredient = self.getFromName(id);
-            self.toggleConnect(ingredient);
-        }
-    });
-
-// WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY OVERCOMPLICATED
-// When I designed this section I thought the menu would be elsewhere, and the mouse would need time to get there
-// If I were to re-do it I'd just make an invisible div appear over the mouse and including a menu to the right, that'd hide when the mouse left it.
-    self.menuId = null;
-    self.endMenuTimeout = null;
-    self.mouseOnNode = false;
-
-    self.renderMenuButtons = function() {
-        var ingredient = self.getFromName(self.menuId);
-        if (ingredient.selected) {
-            $('#select').removeClass('btn-primary');
-            $('#select').addClass('btn-light');
-            $('#select').text('Unselect');
-        } else {
-            $('#select').removeClass('btn-light');
-            $('#select').addClass('btn-primary');
-            $('#select').text('Select');
-        }
-        if (ingredient.locked) {
-            $('#lock').removeClass('btn-primary');
-            $('#lock').addClass('btn-light');
-            $('#lock').text('Unlock');
-        } else {
-            $('#lock').removeClass('btn-light');
-            $('#lock').addClass('btn-primary');
-            $('#lock').text('Lock');
-        }
-        if (ingredient.connected) {
-            $('#connect').removeClass('btn-primary');
-            $('#connect').addClass('btn-light');
-            $('#connect').text('Unconnect');
-        } else {
-            $('#connect').removeClass('btn-light');
-            $('#connect').addClass('btn-primary');
-            $('#connect').text('Connect');
-        }
-    }
-
-    $('#remove').click(function() {
-        var ingredient = self.getFromName(self.menuId);
-        self.endMenu();
-        ingredient.clear();
-        self.saveProjectToLocalStorage('');
-    })
-
-    $('#select').click(function() {
-        var ingredient = self.getFromName(self.menuId);
-        self.toggleSelect(ingredient);
-        self.renderMenuButtons();
-    });
-
-    $('#lock').click(function() {
-        var ingredient = self.getFromName(self.menuId);
-        self.toggleLock(ingredient);
-        self.renderMenuButtons();
-    })
-
-    $('#connect').click(function() {
-        var ingredient = self.getFromName(self.menuId);
-        self.toggleConnect(ingredient);
-        self.renderMenuButtons();
-    });
-
-    self.startMenu = function(menuId) {
-        self.menuId = menuId;
-        var ingredient = self.getFromName(self.menuId);
-        ingredient.menu = true;
-        var canvasPosition = self.network.getPositions(menuId)[menuId];
-        var domPosition = self.network.canvasToDOM(canvasPosition);
-        $('#menu-wrapper').css({
-            top: domPosition.y,
-            left: domPosition.x
-        })
-        self.renderMenuButtons();
-        $('#menu-wrapper').show();
-        self.network.selectNodes([menuId]);
-        self.getFromName(self.menuId).render();
-    }
-
-    self.endMenu = function() {
-        self.network.unselectAll();
-        if (self.menuId) {
-            var ingredient = self.getFromName(self.menuId);
-            var size = self.nodes.get(self.menuId).size - 5;
-            self.nodes.update({
-                id: self.menuId,
-                size: size
-            });
-            ingredient.menu = false;
+            var ingredient = self.getFromId(id);
+            if (ingredient.connected) {
+                ingredient.connected = false;
+                self.connectedSet.delete(ingredient);
+            } else {
+                ingredient.connected = true;
+                self.connectedSet.add(ingredient);
+            }
             ingredient.render();
-            self.menuId = null;
+            self.saveProjectToLocalStorage('');
         }
-        $('#menu-wrapper').hide();
-        $('#menu-wrapper').css({
-            left: 0,
-            top: 0
-        })
-    }
-
-    self.network.on('showPopup', function(menuId) {
-        self.mouseOnNode = true;
-
-        if (self.endMenuTimeout) { // either because mouse has returned to hoverNode, or because mouse is at a new node and the old is to be dehovered
-            clearTimeout(self.endMenuTimeout);
-        }
-        if (self.menuId && self.menuId != menuId) {
-            self.endMenu();
-        }
-        if (self.menuId != menuId) {
-            self.startMenu(menuId);
-        }
-    });
-
-    self.network.on('hidePopup', function() {
-        if (self.mouseOnNode) {
-            self.mouseOnNode = false;
-            self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
-                self.endMenu();
-                self.endMenuTimeout = null;
-            }, 300); // how long it takes menu to disappear
-        }
-    });
-
-    $('#menu-wrapper').hover(function() {
-        if (self.endMenuTimeout) {
-            clearTimeout(self.endMenuTimeout);
-            self.endMenuTimeout = null;
-        }
-    }, function() {
-        self.endMenu();
     });
 
     $('#save').click(function() {
@@ -595,8 +323,8 @@ var SaladManager = function() {
         var confirmation = prompt('Are you sure? (y/n)');
         if (confirmation == 'y') {
             self.ingredients.forEach(function(ingredient) {
-                ingredient.add();
-                // ingredient.render();
+                ingredient.present = true;
+                ingredient.render();
             });
             self.saveProjectToLocalStorage('');
         }
@@ -607,6 +335,7 @@ var SaladManager = function() {
         if (confirmation == 'y') {
             self.ingredients.forEach(function(ingredient) {
                 ingredient.clear();
+                ingredient.render();
             });
             self.saveProjectToLocalStorage('');
         }
@@ -616,8 +345,8 @@ var SaladManager = function() {
 
     self.generate = function() {
         if (!self.generating) {
-            self.generating = true;
             $('#generating').show();
+            self.generating = true;
             fetch('/generate-salad', {
                 method: 'post',
                 headers: {
@@ -648,15 +377,16 @@ var SaladManager = function() {
 
                 self.ingredients.forEach(function(ingredient) {
                     if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
-                        ingredient.add({
-                            selected: selectedNamesSet.has(ingredient.name),
-                            locked: lockedNamesSet.has(ingredient.name),
-                            connected: false
-                        });
-                        // self.getPresentSet().add(ingredient);
+                        ingredient.present = true;
+                        self.presentSet.add(ingredient);
                     } // no else clause, as I don't want to remove any ingredients added since the request was sent
                     ingredient.selected = selectedNamesSet.has(ingredient.name);
                     ingredient.locked = lockedNamesSet.has(ingredient.name);
+                });
+                self.selectedSet = new Set(self.getIngredientsFromNames(selectedNames));
+                self.lockedSet = new Set(self.getIngredientsFromNames(lockedNames));
+
+                self.ingredients.forEach(function(ingredient) {
                     ingredient.render();
                 });
 
@@ -679,18 +409,14 @@ var SaladManager = function() {
     });
 
     $('body').keydown(function(event){
-        var spacebar = event.keyCode == 32;
-        var activeElement = $(document.activeElement);
-        var searching = activeElement.hasClass('selectivity-multiple-input');
-        var emptySearch = $('.selectivity-multiple-input').val() == '';
-        if (spacebar && (!searching || emptySearch)) {
-            $('#present').selectivity('close');
-            activeElement.blur()
+        if (event.keyCode == 32) {
+            $(document.activeElement).blur();
             self.generate();
         }
     });
 
     $('#recipe').click(function() {
+        console.log('clicked')
         var leafyGreenNames = [];
         var extraNames = [];
         var extraVegNames = [];
@@ -703,10 +429,13 @@ var SaladManager = function() {
         var dressingSaltNames = [];
         var dressingPepperNames = [];
 
-        self.getSelectedSet().forEach(function(ingredient) {
+        self.selectedSet.forEach(function(ingredient) {
+            // console.log('name', ingredient.name, ingredient.data);
             if (ingredient.data.salad_green == 'y') {
+                // console.log('leafy green')
                 leafyGreenNames.push(ingredient.name);
             } else if (ingredient.data.salad_extra == 'y') {
+                // console.log('extra')
                 extraNames.push(ingredient.name);
                 if (ingredient.data.salad_extra_veg == 'y') {
                     extraVegNames.push(ingredient.name);
@@ -718,6 +447,7 @@ var SaladManager = function() {
                     extraOtherNames.push(ingredient.name);
                 }
             } else if (ingredient.data.salad_dressing == 'y') {
+                // console.log('dressing')
                 dressingNames.push(ingredient.name);
                 if (ingredient.data.salad_dressing_oil == 'y') {
                     dressingOilNames.push(ingredient.name);
@@ -730,8 +460,12 @@ var SaladManager = function() {
                 }
             }
         });
+        // console.log('LEAFY GREEN NAMES', leafyGreenNames); //empty
+        // console.log('EXTRA NAMES', extraNames); //115
+        // console.log('DRESSING NAMES', dressingNames); //21
         var leafyGreensHtml = '<li>Leafy greens</li><ul>';
         if (leafyGreenNames.length > 0) {
+            // console.log('leafy greens long enough', leafygreenNames)
             leafyGreenNames.forEach(function(name) {
                 leafyGreensHtml += '<li>' + name + '</li>';
             });
@@ -752,7 +486,9 @@ var SaladManager = function() {
 
         var dressingHtml = '<li>Dressing</li><ul>';
         if (dressingNames.length > 0) {
+            // console.log('dressing long enough')
             if (dressingOilNames.length > 0) {
+                // console.log('some oil names')
                 dressingOilNames.forEach(function(name) {
                     dressingHtml += '<li>(~1 tbs/serving) ' + name + '</li>';
                 });
@@ -760,6 +496,7 @@ var SaladManager = function() {
                 dressingHtml += '<li>You haven\'nt added a dressing oil. I suspect the salad would taste better if you go back and add one!</li>';
             }
             if (dressingVinegarNames.length > 0) {
+                // console.log('some vinegar')
                 dressingVinegarNames.forEach(function(name) {
                     dressingHtml += '<li>(~.5 tbs/serving) ' + name + '</li>';
                 });
@@ -767,6 +504,7 @@ var SaladManager = function() {
                 dressingHtml += '<li>You haven\'nt added a dressing vinegar. Without vinegar, your salad will probably taste lopsided; you might want to go back and add one.</li>';
             }
             if (dressingSaltNames.length > 0) {
+                // console.log('some salt')
                 dressingSaltNames.forEach(function(name) {
                     dressingHtml += '<li>(~a pinch/serving) ' + name + '</li>';
                 });
@@ -774,6 +512,7 @@ var SaladManager = function() {
                 dressingHtml += '<li>You haven\'nt added a salt. This one\'s kinda optional, but I\'d strongly suggest you at least try adding salt to a salad or two.</li>';
             }
             if (dressingPepperNames.length > 0) {
+                // console.log('some pepper')
                 dressingPepperNames.forEach(function(name) {
                     dressingHtml += '<li>(~1/4 tsp/serving) ' + name + '</li>';
                 });
@@ -784,6 +523,9 @@ var SaladManager = function() {
             dressingHtml += '<li>You haven\'nt selected any dressing ingredients at all! I suspect your salad will be pretty dry without dressing...</li>';
         }
         dressingHtml += '</ul>';
+        // console.log('leafygreenshtml', leafyGreensHtml);
+        // console.log('extrashtml', extrasHtml);
+        // console.log('dressingHtml', dressingHtml);
         $('#ingredients-list').html(leafyGreensHtml + extrasHtml + dressingHtml);
         $('#about-window').hide();
         $('#recipe-window').show();

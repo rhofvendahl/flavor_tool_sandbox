@@ -19,10 +19,23 @@ var SaladIngredient = function(saladManager, data) {
     self.uClashNames = data.upper_clashes_with_names;
     self.aClashNames = data.all_clashes_with_names;
 
-    self.present = true;
+    self.prevPresent = false;
+    self.present = false;
+
+    self.prevSelected = false;
     self.selected = false;
+
+    self.prevLocked = false;
     self.locked = false;
+
+    self.prevConnected = false;
     self.connected = false;
+
+    self.prevMenu = false;
+    self.menu = false;
+
+    self.prevHighlighted = false;
+    self.highlighted = false;
 
     if (data.salad_green == 'y') {
         self.color = 'lightgreen';
@@ -49,12 +62,12 @@ var SaladIngredient = function(saladManager, data) {
         var toId;
         if (self.id > other.id) {
             edgeId = other.id.toString() + '-' + self.id.toString();
-            fromId = other.id
-            toId = self.id
+            fromId = other.name;
+            toId = self.name;
         } else {
             edgeId = self.id.toString() + '-' + other.id.toString();
-            fromId = self.id
-            toId = other.id
+            fromId = self.name;
+            toId = other.name;
         }
 
         var edgeColor;
@@ -72,10 +85,6 @@ var SaladIngredient = function(saladManager, data) {
             edgeColor = 'whitesmoke';
             physics = self.selected && other.selected;
             hidden = false;
-        // } else if (connectionType == 'lc') {
-        //     edgeColor = 'purple';
-        //     physics = false;//self.selected && other.selected;
-        //     hidden = true;
         } else {
             edgeColor = 'purple';
             physics = false;
@@ -117,87 +126,113 @@ var SaladIngredient = function(saladManager, data) {
 
     self.render = function() {
         if (self.present) {
-            $('#present').selectivity('add', self.name);
-            var backgroundColor;
-            if (self.selected) {
-                backgroundColor = self.color;
-            } else {
-                backgroundColor = 'white';
-            }
-            var borderColor;
-            var borderWidth;
-            if (self.locked) {
-                borderColor = 'black';
-                borderWidth = 4;
-            } else {
-                borderColor = self.color;
-                borderWidth = 2;
-            }
-            self.saladManager.nodes.update({
-                id: self.id,
-                label: self.name,
-                color: {
-                    'background': backgroundColor,
-                    'border': borderColor,
-                    highlight: {
-                        'background': backgroundColor,
-                        'border': borderColor
-                    },
-                },
-                borderWidth: borderWidth,
-                borderWidthSelected: borderWidth,
-                shape: 'dot'
-            });
 
-            self.ucNames.forEach(function(otherName) {
-                self.renderConnection(otherName, 'uc');
-            });
-            self.udNames.forEach(function(otherName) {
-                self.renderConnection(otherName, 'ud');
-            });
-            // self.lcNames.forEach(function(otherName) {
-            //     self.renderConnection(otherName, 'lc');
-            // });
-            self.ldNames.forEach(function(otherName) {
-                self.renderConnection(otherName, 'ld');
-            });
-            self.uClashNames.forEach(function(otherName) {
-                self.renderConnection(otherName, 'uClash');
-            });
-            self.lClashNames.forEach(function(otherName) {
-                self.renderConnection(otherName, 'lClash');
-            });
+            // dirty node
+            if ((!self.prevPresent) || (self.selected != self.prevSelected) || (self.locked != self.prevLocked) || (self.connected != self.prevConnected) || (self.highlighted != self.prevHighlighted) || (self.menu != self.prevMenu)) {
+                var backgroundColor;
+                if (self.selected) {
+                    backgroundColor = self.color;
+                } else {
+                    backgroundColor = 'white';
+                }
 
-            var edgeId = self.id.toString() + '-' + self.id.toString();
-            if (self.connected) {
-                self.saladManager.edges.update({
-                    id: edgeId,
-                    from: self.id,
-                    to: self.id,
+                var borderColor;
+                var borderWidth;
+                if (self.locked) {
+                    borderColor = 'black';
+                    borderWidth = 4;
+                } else {
+                    borderColor = self.color;
+                    borderWidth = 2;
+                }
+                var size = 25;
+                if (self.menu) size += 5;
+                if (self.highlighted) size += 25;
+
+                self.saladManager.nodes.update({
+                    id: self.name,
+                    label: self.name,
                     color: {
-                        color: 'black',
-                        inherit: false
+                        'background': backgroundColor,
+                        'border': borderColor,
+                        highlight: {
+                            'background': backgroundColor,
+                            'border': borderColor
+                        },
                     },
-                    physics: true,
-                    dashes: true,
+                    borderWidth: borderWidth,
+                    borderWidthSelected: borderWidth,
+                    shape: 'dot',
+                    size: size
                 });
-            } else {
-                self.saladManager.edges.remove([edgeId]);
             }
-        } else {
-            self.saladManager.nodes.remove([self.id]);
-            $('#present').selectivity('remove', self.name);
+
+            // dirty connections
+            if ((self.selected != self.prevSelected) || (self.connected != self.prevConnected)) {
+                self.ucNames.forEach(function(otherName) {
+                    self.renderConnection(otherName, 'uc');
+                });
+                self.udNames.forEach(function(otherName) {
+                    self.renderConnection(otherName, 'ud');
+                });
+                self.ldNames.forEach(function(otherName) {
+                    self.renderConnection(otherName, 'ld');
+                });
+                self.uClashNames.forEach(function(otherName) {
+                    self.renderConnection(otherName, 'uClash');
+                });
+                self.lClashNames.forEach(function(otherName) {
+                    self.renderConnection(otherName, 'lClash');
+                });
+
+                var edgeId = self.id.toString() + '-' + self.id.toString();
+                if (self.connected) {
+                    self.saladManager.edges.update({
+                        id: edgeId,
+                        from: self.name,
+                        to: self.name,
+                        color: {
+                            color: 'black',
+                            inherit: false
+                        },
+                        physics: true,
+                        dashes: true,
+                    });
+                } else {
+                    self.saladManager.edges.remove([edgeId]);
+                }
+            }
+
+            self.prevPresent = self.present;
+            self.prevSelected = self.selected;
+            self.prevLocked = self.locked;
+            self.prevConnected = self.connected;
+            self.prevHighlighted = self.highlighted;
+            self.prevMenu = self.menu;
+        }
+
+        // should maybe make this happen regardless of prevPresent
+        if (!self.present && self.prevPresent) {
+            self.saladManager.nodes.remove([self.name]);
+            self.prevPresent = self.present;
         }
     }
 
     self.clear = function() {
         self.present = false;
-        self.saladManager.presentSet.delete(self);
         self.selected = false;
-        self.saladManager.selectedSet.delete(self);
         self.locked = false;
-        self.saladManager.lockedSet.delete(self);
         self.connected = false;
-        self.saladManager.connectedSet.delete(self);
+        $('#present').selectivity('remove', self.name);
+        self.render();
+    }
+
+    self.add = function(params={}) {
+        self.present = true;
+        self.selected = params.selected || false;
+        self.locked = params.locked || false;
+        self.connected = params.connected || false;
+        $('#present').selectivity('add', self.name);
+        self.render();
     }
 }

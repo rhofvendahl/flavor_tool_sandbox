@@ -18,7 +18,6 @@ var StirFryManager = function() {
             maxVelocity: 5
         },
         interaction: {
-            // hover: true,
             tooltipDelay: 1200
         },
         edges: {
@@ -28,10 +27,6 @@ var StirFryManager = function() {
     self.network = new vis.Network(container, data, options);
 
     self.ingredients = [];
-    // self.presentSet = new Set();
-    // self.selectedSet = new Set();
-    // self.lockedSet = new Set();
-    // self.connectedSet = new Set();
 
     self.getPresentSet = function() {
         var presentSet = new Set();
@@ -123,14 +118,6 @@ var StirFryManager = function() {
         return highlightedNames;
     }
 
-    // self.getFromId = function(id) {
-    //     var match = null;
-    //     self.ingredients.forEach(function(ingredient) {
-    //         if (ingredient.id == id) match = ingredient;
-    //     });
-    //     return match;
-    // }
-
     self.getFromName = function(name) {
         var match = null;
         self.ingredients.forEach(function(ingredient) {
@@ -146,15 +133,6 @@ var StirFryManager = function() {
         });
         return names;
     }
-
-    // self.getNamesFromSet = function(set) {
-    //     var ingredients = Array.from(set);
-    //     var names = [];
-    //     ingredients.forEach(function(ingredient) {
-    //         names.push(ingredient.name);
-    //     });
-    //     return names;
-    // }
 
     self.getIngredientsFromNames = function(names) {
         var ingredients = [];
@@ -218,11 +196,15 @@ var StirFryManager = function() {
                 var lockedSet = new Set(self.getIngredientsFromNames(data.lockedArray));
                 var connectedSet = new Set(self.getIngredientsFromNames(data.connectedArray));
                 self.ingredients.forEach(function(ingredient) {
-                    ingredient.present = presentSet.has(ingredient);
-                    ingredient.selected = selectedSet.has(ingredient);
-                    ingredient.locked = lockedSet.has(ingredient);
-                    ingredient.connected = connectedSet.has(ingredient)
-                    ingredient.render();
+                    if (presentSet.has(ingredient)) {
+                        ingredient.add({
+                            selected: selectedSet.has(ingredient),
+                            locked: lockedSet.has(ingredient),
+                            connected: connectedSet.has(ingredient)
+                        });
+                    } else {
+                        ingredient.clear();
+                    }
                 });
             } else {
                 console.log('no data found in localStorage')
@@ -249,24 +231,16 @@ var StirFryManager = function() {
             }
         });
         var highlightedNames = self.getHighlightedNames();
-        // console.log(highlightedNames);
         if (highlightedNames.length > 0) {
-            console.log('long enough', highlightedNames.length, highlightedNames[0])
-            console.log(self.nodes.getIds()[0])
             self.network.fit({
                 nodes: highlightedNames,
-                // animation: {
-                //     duration: 300
-                // }
                 animation: true
             });
-            // self.network.fit(highlightedNames);
         }
     }
 
     self.load = function() {
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
-
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
             self.saveToLocalStorage('abouted', true);
@@ -285,7 +259,6 @@ var StirFryManager = function() {
             ingredients.forEach(function(ingredient) {
                 var stirFryIngredient = new StirFryIngredient(self, ingredient);
                 self.ingredients.push(stirFryIngredient);
-                // self.presentSet.add(stirFryIngredient);
             });
 
             $('#present').selectivity({
@@ -303,12 +276,9 @@ var StirFryManager = function() {
                 if (event.added && typeof(event.added) == 'object') {
                     var ingredient = self.getFromName(event.added.id);
                     ingredient.present = true;
-                    // self.presentSet.add(ingredient);
                     ingredient.render();
                 } else if (event.removed && typeof(event.removed) == 'object') {
-                    console.log('should be removing')
                     var ingredient = self.getFromName(event.removed.id);
-                    console.log(ingredient.name)
                     ingredient.clear();
                 }
             });
@@ -326,12 +296,7 @@ var StirFryManager = function() {
             selectivityInput.addClass('mt-3');
 
             selectivityInput.css({
-                // border: '1px solid #CED4DA',
                 border: '1px solid #6C757D',
-                // borderTopLeftRadius: '0px',
-                // borderTopRightRadius: '0px',
-                // borderBottomLeftRadius: '8px',
-                // borderBottomRightRadius: '8px',
                 borderRadius: '8px',
                 backgroundColor: 'white',
                 position: 'absolute',
@@ -345,7 +310,7 @@ var StirFryManager = function() {
                 self.loadProjectFromLocalStorage('');
             } else {
                 self.ingredients.forEach(function(ingredient) {
-                    ingredient.render();
+                    ingredient.add();
                 });
             }
         }).catch(function(error) {
@@ -360,32 +325,20 @@ var StirFryManager = function() {
         if (ingredient.selected) {
             if (ingredient.locked) {
                 ingredient.locked = false;
-                // self.lockedSet.delete(ingredient);
             }
             ingredient.selected = false;
-            // self.selectedSet.delete(ingredient);
         } else {
             ingredient.selected = true;
-            // self.selectedSet.add(ingredient);
         }
         ingredient.render();
         self.saveProjectToLocalStorage('');
     }
 
-    // $('#present').on('selectivity-open', function() {
-    //     $('.selectivity-dropdown').first().appendTo($('#present-input-wrapper'));
-    //     console.log('heyheyheyhey')
-    // })
-
     self.network.on('click', function(properties) {
         $('#present').selectivity('close');
         $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
         $(document.activeElement).blur()
-        var value = $('input').val()
-        // console.log(value)
-        // $('input').change(function() {
-        //     console.log('hey')
-        // })
+
         if (self.clickTimeout) {
             clearTimeout(self.clickTimeout);
             self.clickTimeout = null;
@@ -427,10 +380,8 @@ var StirFryManager = function() {
     self.toggleConnect = function(ingredient) {
         if (ingredient.connected) {
             ingredient.connected = false;
-            // self.connectedSet.delete(ingredient);
         } else {
             ingredient.connected = true;
-            // self.connectedSet.add(ingredient);
         }
         ingredient.render();
             self.saveProjectToLocalStorage('');
@@ -527,7 +478,6 @@ var StirFryManager = function() {
         self.network.unselectAll();
         if (self.menuId) {
             var ingredient = self.getFromName(self.menuId);
-            // console.log(ingredient, self.menuId)
             var size = self.nodes.get(self.menuId).size - 5;
             self.nodes.update({
                 id: self.menuId,
@@ -556,7 +506,6 @@ var StirFryManager = function() {
         if (self.menuId != menuId) {
             self.startMenu(menuId);
         }
-        console.log(self.getFromName(menuId).name);
     });
 
     self.network.on('hidePopup', function() {
@@ -644,8 +593,7 @@ var StirFryManager = function() {
         var confirmation = prompt('Are you sure? (y/n)');
         if (confirmation == 'y') {
             self.ingredients.forEach(function(ingredient) {
-                ingredient.present = true;
-                ingredient.render();
+                ingredient.add();
             });
             self.saveProjectToLocalStorage('');
         }
@@ -664,11 +612,9 @@ var StirFryManager = function() {
     self.generating = false;
 
     self.generate = function() {
-        // console.log('tryna generate', self.generating);
         if (!self.generating) {
             self.generating = true;
             $('#generating').show();
-            console.log('len present names', self.getPresentNames().length);
             fetch('/generate-stir-fry', {
                 method: 'post',
                 headers: {
@@ -699,16 +645,15 @@ var StirFryManager = function() {
 
                 self.ingredients.forEach(function(ingredient) {
                     if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
-                        ingredient.present = true;
-                        self.getPresentSet().add(ingredient);
+                        ingredient.add({
+                            selected: selectedNamesSet.has(ingredient.name),
+                            locked: lockedNamesSet.has(ingredient.name),
+                            connected: false
+                        });
+                        // self.getPresentSet().add(ingredient);
                     } // no else clause, as I don't want to remove any ingredients added since the request was sent
                     ingredient.selected = selectedNamesSet.has(ingredient.name);
                     ingredient.locked = lockedNamesSet.has(ingredient.name);
-                });
-                // self.selectedSet = new Set(self.getIngredientsFromNames(selectedNames));
-                // self.lockedSet = new Set(self.getIngredientsFromNames(lockedNames));
-
-                self.ingredients.forEach(function(ingredient) {
                     ingredient.render();
                 });
 
@@ -754,7 +699,6 @@ var StirFryManager = function() {
         var flavoringNames = [];
 
         self.getSelectedSet().forEach(function(ingredient) {
-            console.log('ingredient', ingredient.name)
             if (ingredient.data.stir_fry_early == 'y') {
                 if (ingredient.data.stir_fry_mid == 'y') {
                     if (ingredient.data.stir_fry_late == 'y') {

@@ -20,7 +20,7 @@ var StirFryIngredient = function(stirFryManager, data) {
     self.aClashNames = data.all_clashes_with_names;
 
     self.prevPresent = false;
-    self.present = true;
+    self.present = false;
 
     self.prevSelected = false;
     self.selected = false;
@@ -60,8 +60,8 @@ var StirFryIngredient = function(stirFryManager, data) {
             toId = self.name;
         } else {
             edgeId = self.id.toString() + '-' + other.id.toString();
-            fromId = self.id;
-            toId = other.id;
+            fromId = self.name;
+            toId = other.name;
         }
 
         var edgeColor;
@@ -79,10 +79,6 @@ var StirFryIngredient = function(stirFryManager, data) {
             edgeColor = 'whitesmoke';
             physics = self.selected && other.selected;
             hidden = false;
-        // } else if (connectionType == 'lc') {
-        //     edgeColor = 'purple';
-        //     physics = false;//self.selected && other.selected;
-        //     hidden = true;
         } else {
             edgeColor = 'purple';
             physics = false;
@@ -124,9 +120,9 @@ var StirFryIngredient = function(stirFryManager, data) {
 
     self.render = function() {
         if (self.present) {
-            if (!self.prevPresent) {
-                $('#present').selectivity('add', self.name);
-            }
+            // if (!self.prevPresent) {
+            //     $('#present').selectivity('add', self.name);
+            // }
 
             // dirty node
             if ((!self.prevPresent) || (self.selected != self.prevSelected) || (self.locked != self.prevLocked) || (self.connected != self.prevConnected) || (self.highlighted != self.prevHighlighted) || (self.menu != self.prevMenu)) {
@@ -176,9 +172,6 @@ var StirFryIngredient = function(stirFryManager, data) {
                 self.udNames.forEach(function(otherName) {
                     self.renderConnection(otherName, 'ud');
                 });
-                // self.lcNames.forEach(function(otherName) {
-                    //     self.renderConnection(otherName, 'lc');
-                    // });
                 self.ldNames.forEach(function(otherName) {
                     self.renderConnection(otherName, 'ld');
                 });
@@ -200,19 +193,20 @@ var StirFryIngredient = function(stirFryManager, data) {
                     self.stirFryManager.edges.remove([edgeId]);
                 }
             }
+
+            self.prevPresent = self.present;
+            self.prevSelected = self.selected;
+            self.prevLocked = self.locked;
+            self.prevConnected = self.connected;
+            self.prevHighlighted = self.highlighted;
+            self.prevMenu = self.menu;
         }
 
         if (!self.present && self.prevPresent) {
             self.stirFryManager.nodes.remove([self.name]);
-            $('#present').selectivity('remove', self.name);
+            // $('#present').selectivity('remove', self.name);
+            self.prevPresent = self.present;
         }
-
-        self.prevPresent = self.present;
-        self.prevSelected = self.selected;
-        self.prevLocked = self.locked;
-        self.prevConnected = self.connected;
-        self.prevHighlighted = self.highlighted;
-        self.prevMenu = self.menu;
     }
 
     self.clear = function() {
@@ -220,7 +214,16 @@ var StirFryIngredient = function(stirFryManager, data) {
         self.selected = false;
         self.locked = false;
         self.connected = false;
-        console.log('cleared', self.present, self.prevPresent)
+        $('#present').selectivity('remove', self.name);
+        self.render();
+    }
+
+    self.add = function(params={}) {
+        self.present = true;
+        self.selected = params.selected || false;
+        self.locked = params.locked || false;
+        self.connected = params.connected || false;
+        $('#present').selectivity('add', self.name);
         self.render();
     }
 }

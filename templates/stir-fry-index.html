@@ -24,35 +24,6 @@
         <div id='generating' class="card shadow">
             <div class="card-header">Generating...</div>
         </div>
-        <!-- <div id='about-window' class="card shadow">
-            <div class="card-header">
-                About
-                <button id='about-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
-            </div>
-            <div class="card-body">
-                <h5 class="card-title mb-4">Welcome to the Flavor Tool!</h5>
-                <p class="card-text mb-4">The top left box lists all currently present ingredients. To add an ingredient, just search and click (or press enter); to remove an ingredient press the "X" (or backspace). You can use the "all" and "none" buttons to add or remove in bulk.</p>
-                <p class="card-text mb-2">The main window displays each present ingredient as a color-coded node:</p>
-                <ul class='mb-4'>
-                    <li>green=vegetable</li>
-                    <li>orange=fruit</li>
-                    <li>brown=protein</li>
-                    <li>tan=grain</li>
-                    <li>grey=other</li>
-                </ul>
-                <p class="card-text mb-2">There are three ways to manipulate these ingredients:</p>
-                <ol class='mb-4'>
-                    <li><strong>Click to select</strong> an ingredient, marking it to include in the stir-fry. Click again to de-select.</li>
-                    <li><strong>Double click to lock</strong> an ingredient. If you auto-generate a stir-fry, these ingredients will be used as a base. Double click again to unlock.</li>
-                    <li><strong>Right click</strong> an ingredient to show which other ingredients <strong>pair with</strong> it. Black lines are strong pairs, grey lines are weaker.</li>
-                </ol>
-                <p class="card-text mb-4">Selected ingredients that pair well together will be connected with a solid line (black for strong, grey for weak).</p>
-                <p class="card-text mb-4">When you've selected a set of ingredients you like, try locking them and pressing "<strong>Generate</strong>", on the left (or spacebar). This will draw on a bunch of flavor data (mostly gathered from <em>The Vegetarian Flavor Bible</em>, Page 2014) to select some other ingredients that (hopefully) complement the ones you've locked, filling in the missing pieces.</p>
-                <p class="card-text mb-4">The "<strong>Save</strong>" and "<strong>Load</strong>" buttons let you save multiple projects, so you can play around with different configurations, or pick up where you left off.</p>
-                <p class="card-text mb-4">When you're ready to get cookin, just hit "<strong>Get recipe</strong>" and go to town.</p>
-                <h5 class="card-title">Enjoy! :-)</h5>
-            </div>
-        </div> -->
         <div id='about-window' class="card shadow">
             <div class="card-header">
                 About
@@ -70,14 +41,12 @@
                         <li><span id='tan'>tan</span>=grain</li>
                         <li><span id='grey'>grey</span>=other</li>
                     </ul>
-                    <!-- <li>Hovering over an ingredient and pressing 'select' (or clicking) marks an ingredient to include in the dish. You can mark the ingredients you for <em>sure</em> want by pressing 'lock' (or double-clicking).</li> -->
                     <li>Mark ingredients to include by hovering over an ingredient and pressing 'select' (or clicking).</li>
                     <li>You can mark the ingredients you for <em>sure</em> want by pressing 'lock' (or double-clicking).</li>
                     <li>To see which ingredients pair well together, try pressing 'connect' (or right-clicking).</li>
                     <ul>
                         <li><span id='black'>black</span>=strong pair</li>
                         <li><span id='grey'>grey</span>=weaker pair</li>
-                        <li><span id='red'>red</span>=clashing pair</li>
                     </ul>
                 </ul>
                 <h5 class="card-title">Generating recipes</h5>
@@ -105,11 +74,11 @@
                 <ul>
                     <li>Stir-frying (aka sautéing) mostly involves frying vegetables in oil, over high heat. To do it by the book (specifically <em>Tassajara Cooking</em>, Brown 1974), the veg must be dry and not piled up; if the pieces don't have continuous contact with the pan, the ones on top will be steaming. For crunchy veg like broccoli you'll want to turn off the heat while it's still a little undercooked, since it'll keep cooking some while it cools down.</li>
                     <li>Timing and seasoning are the big challenges for me, and it's even trickier with the diversity (and sometimes weirdness) of generated recicpes. The best I can offer is:</li>
-                        <ol style='list-style-type: lower-alpha;'>
-                            <li>Cook in stages (onions, oil, stuff you really want fried; tough veg; soft veg and fruit and seasoning; more seasoning & maybe garnish).</li>
-                            <li>Balance flavors (savory, salty, sweet, sour, spicy, bitter).</li>
-                            <li>Season slowly and, if you've got fresh veg to show off, sparingly.</li>
-                        </ol>
+                    <ol style='list-style-type: lower-alpha;'>
+                        <li>Cook in stages (onions, oil, stuff you really want fried; tough veg; soft veg and fruit and seasoning; more seasoning & maybe garnish).</li>
+                        <li>Balance flavors (savory, salty, sweet, sour, spicy, bitter).</li>
+                        <li>Season slowly and, if you've got fresh veg to show off, sparingly.</li>
+                    </ol>
                     <li>Oh, and another note on herbs/spices: these can be added mid or late. Adding earlier means more flavor blending, later means more flavor. And ground up stuff takes less cooking.</li>
                 </ul>
                 <h5 class="card-title">Instructions:</h5>
@@ -126,7 +95,6 @@
         </div>
         <div id='main' class='row'>
             <div id='controls' class='col-2 p-3 shadow'>
-                <div id='present-input-wrapper'></div>
                 <div id='present'></div>
                 <button id='all' type="button" class="btn btn-secondary mt-3 mr-1">All</button>
                 <button id='none' type="button" class="btn btn-secondary mt-3">None</button><br>
