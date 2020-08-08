@@ -1,0 +1,105 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "green", "id": "GARLIC", "label": "GARLIC", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "label": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "shape": "dot"}, {"color": "lightgrey", "id": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "label": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "shape": "dot"}, {"color": "green", "id": "ONIONS, VIDALIA", "label": "ONIONS, VIDALIA", "shape": "dot"}, {"color": "green", "id": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "label": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, OLIVE", "label": "OIL, OLIVE", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, HIMALAYAN", "label": "SALT, HIMALAYAN", "shape": "dot"}, {"color": "lightgrey", "id": "CARAWAY SEEDS", "label": "CARAWAY SEEDS", "shape": "dot"}, {"color": "lightgrey", "id": "TRUFFLES, WHITE", "label": "TRUFFLES, WHITE", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "black", "from": "GARLIC", "to": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)"}, {"color": "black", "from": "GARLIC", "to": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)"}, {"color": "black", "from": "GARLIC", "to": "ONIONS, VIDALIA"}, {"color": "black", "from": "GARLIC", "to": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)"}, {"color": "black", "from": "GARLIC", "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "GARLIC", "physics": false, "to": "SALT, HIMALAYAN"}, {"color": "grey", "from": "GARLIC", "physics": false, "to": "CARAWAY SEEDS"}, {"color": "black", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "to": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)"}, {"color": "darkgrey", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "to": "ONIONS, VIDALIA"}, {"color": "darkgrey", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "to": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)"}, {"color": "black", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "physics": false, "to": "SALT, HIMALAYAN"}, {"color": "lightgrey", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "physics": false, "to": "CARAWAY SEEDS"}, {"color": "grey", "from": "MUSHROOMS, PORCINI (aka BOLETES or C\u00c8PES; see also MUSHROOMS, WILD)", "physics": false, "to": "TRUFFLES, WHITE"}, {"color": "black", "from": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "to": "ONIONS, VIDALIA"}, {"color": "darkgrey", "from": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "to": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)"}, {"color": "black", "from": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "to": "OIL, OLIVE"}, {"color": "grey", "from": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "physics": false, "to": "CARAWAY SEEDS"}, {"color": "grey", "from": "PARSLEY, generally ITALIAN (aka FLAT-LEAF PARSLEY)", "physics": false, "to": "TRUFFLES, WHITE"}, {"color": "black", "from": "ONIONS, VIDALIA", "to": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)"}, {"color": "black", "from": "ONIONS, VIDALIA", "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "ONIONS, VIDALIA", "physics": false, "to": "SALT, HIMALAYAN"}, {"color": "lightgrey", "from": "ONIONS, VIDALIA", "physics": false, "to": "CARAWAY SEEDS"}, {"color": "black", "from": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "to": "OIL, OLIVE"}, {"color": "darkgrey", "from": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "to": "SALT, HIMALAYAN"}, {"color": "lightgrey", "from": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "physics": false, "to": "CARAWAY SEEDS"}, {"color": "grey", "from": "POTATOES, THIN-SKINNED (e.g., NEW POTATOES, WHITE POTATOES)", "physics": false, "to": "TRUFFLES, WHITE"}, {"color": "lightgrey", "from": "OIL, OLIVE", "physics": false, "to": "SALT, HIMALAYAN"}, {"color": "grey", "from": "OIL, OLIVE", "physics": false, "to": "TRUFFLES, WHITE"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>

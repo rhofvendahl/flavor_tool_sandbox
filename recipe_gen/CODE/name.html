@@ -1,0 +1,105 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "green", "id": "MUSHROOMS, PORTOBELLO", "label": "MUSHROOMS, PORTOBELLO", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "label": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, OYSTER", "label": "MUSHROOMS, OYSTER", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "label": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "shape": "dot"}, {"color": "lightgrey", "id": "LEMONS", "label": "LEMONS", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, OLIVE", "label": "OIL, OLIVE", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, KOSHER", "label": "SALT, KOSHER", "shape": "dot"}, {"color": "green", "id": "CARROTS", "label": "CARROTS", "shape": "dot"}, {"color": "green", "id": "CHIVES", "label": "CHIVES", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "darkgrey", "from": "MUSHROOMS, PORTOBELLO", "to": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH"}, {"color": "darkgrey", "from": "MUSHROOMS, PORTOBELLO", "to": "MUSHROOMS, OYSTER"}, {"color": "darkgrey", "from": "MUSHROOMS, PORTOBELLO", "to": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)"}, {"color": "black", "from": "MUSHROOMS, PORTOBELLO", "to": "LEMONS"}, {"color": "black", "from": "MUSHROOMS, PORTOBELLO", "to": "OIL, OLIVE"}, {"color": "grey", "from": "MUSHROOMS, PORTOBELLO", "physics": false, "to": "SALT, KOSHER"}, {"color": "grey", "from": "MUSHROOMS, PORTOBELLO", "physics": false, "to": "CARROTS"}, {"color": "black", "from": "MUSHROOMS, PORTOBELLO", "to": "CHIVES"}, {"color": "black", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "to": "MUSHROOMS, OYSTER"}, {"color": "black", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "to": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)"}, {"color": "black", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "to": "LEMONS"}, {"color": "black", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "to": "OIL, OLIVE"}, {"color": "grey", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "physics": false, "to": "SALT, KOSHER"}, {"color": "grey", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "physics": false, "to": "CARROTS"}, {"color": "black", "from": "MUSHROOMS, SHIITAKE\u2014DRIED and FRESH", "to": "CHIVES"}, {"color": "darkgrey", "from": "MUSHROOMS, OYSTER", "to": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)"}, {"color": "black", "from": "MUSHROOMS, OYSTER", "to": "LEMONS"}, {"color": "black", "from": "MUSHROOMS, OYSTER", "to": "OIL, OLIVE"}, {"color": "grey", "from": "MUSHROOMS, OYSTER", "physics": false, "to": "SALT, KOSHER"}, {"color": "grey", "from": "MUSHROOMS, OYSTER", "physics": false, "to": "CARROTS"}, {"color": "black", "from": "MUSHROOMS, OYSTER", "to": "CHIVES"}, {"color": "black", "from": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "to": "LEMONS"}, {"color": "black", "from": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "to": "OIL, OLIVE"}, {"color": "grey", "from": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "physics": false, "to": "SALT, KOSHER"}, {"color": "grey", "from": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "physics": false, "to": "CARROTS"}, {"color": "black", "from": "MUSHROOMS, CREMINI (aka CRIMINI or ITALIAN BROWN MUSHROOMS)", "to": "CHIVES"}, {"color": "black", "from": "LEMONS", "to": "OIL, OLIVE"}, {"color": "black", "from": "LEMONS", "to": "CARROTS"}, {"color": "grey", "from": "LEMONS", "physics": false, "to": "CHIVES"}, {"color": "lightgrey", "from": "OIL, OLIVE", "physics": false, "to": "SALT, KOSHER"}, {"color": "grey", "from": "OIL, OLIVE", "physics": false, "to": "CARROTS"}, {"color": "grey", "from": "OIL, OLIVE", "physics": false, "to": "CHIVES"}, {"color": "grey", "from": "SALT, KOSHER", "physics": false, "to": "CARROTS"}, {"color": "darkgrey", "from": "CARROTS", "to": "CHIVES"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>
