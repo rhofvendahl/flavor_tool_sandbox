@@ -618,6 +618,7 @@ var SaladManager = function() {
         if (!self.generating) {
             self.generating = true;
             $('#generating').show();
+            console.log('about to fetch')
             fetch('/generate-salad', {
                 method: 'post',
                 headers: {
@@ -625,8 +626,10 @@ var SaladManager = function() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    present: self.getNamesFromSet(self.presentSet),
-                    locked: self.getNamesFromSet(self.lockedSet)
+                    // present: self.getNamesFromSet(self.presentSet),
+                    // locked: self.getNamesFromSet(self.lockedSet)
+                    present: self.getPresentNames(),
+                    locked: self.getLockedNames()
                 })
             }).then(function(response) {
                 if (!response.ok) {

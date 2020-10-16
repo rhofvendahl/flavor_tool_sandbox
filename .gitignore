@@ -1,2 +1,2 @@
 venv
-recipe_gen/DATA/*.pickle
+big_pickles/

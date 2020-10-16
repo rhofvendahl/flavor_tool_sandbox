@@ -5,12 +5,12 @@
 
     <link rel='stylesheet' href='static/css/lib/selectivity-jquery.min.css' type='text/css'>
     <link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' type='text/css'>
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href='//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css' rel='stylesheet'>
     <link href='static/css/lib/vis-network.min.css' rel='stylesheet' type='text/css' />
     <link href='static/css/stir-fry-style.css' rel='stylesheet' type='text/css' />
     <link rel='shortcut icon' href='static/img/favicon.ico'>
 
-    <script type="text/javascript" src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type='text/javascript' src='//code.jquery.com/jquery-3.2.1.min.js'></script>
     <script type='text/javascript' src='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js'></script>
     <script type='text/javascript' src='static/js/lib/vis-network.min.js'></script>
     <script type='text/javascript' src='static/js/lib/selectivity-jquery.min.js'></script>
@@ -21,17 +21,17 @@
 
 <body>
     <div class='container-fluid'>
-        <div id='generating' class="card shadow">
-            <div class="card-header">Generating...</div>
+        <div id='generating' class='card shadow'>
+            <div class='card-header'>Generating...</div>
         </div>
-        <div id='about-window' class="card shadow">
-            <div class="card-header">
+        <div id='about-window' class='card shadow'>
+            <div class='card-header'>
                 About
-                <button id='about-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
+                <button id='about-close' type='button' class='btn btn-sm btn-danger float-right'>Close</button>
             </div>
-            <div class="card-body">
+            <div class='card-body'>
                 <h3 class='card-title mb-3'>Welcome to the Flavor Tool</h3>
-                <h5 class="card-title">Selecting ingredients</h5>
+                <h5 class='card-title'>Selecting ingredients</h5>
                 <ul class='mb-3'>
                     <li>Each circle represents an ingredient that could go in your stir-fry. The ingredients are color-coded:</li>
                     <ul>
@@ -49,28 +49,28 @@
                         <li><span id='grey'>grey</span>=weaker pair</li>
                     </ul>
                 </ul>
-                <h5 class="card-title">Generating recipes</h5>
+                <h5 class='card-title'>Generating recipes</h5>
                 <ul class='mb-3'>
                     <li>Once you've selected some ingredients and locked the ones you for sure want to include, try pressing 'generate' (or hitting spacebar).</li>
                     <li>The generator draws on pairings and other data* to select a handful of ingredients that might go well together.</li>
                     <li>If you like a generated recipe but want to keep playing around, the 'save' and 'load' buttons will let you save and switch between projects.</li>
                     <li>When you're ready to get cooking, just hit 'Get recipe' to plug the selected ingredients into a template** for cooking tasty stir-frys.</li>
                 </ul>
-                <h3 class="card-title mb-4">Enjoy! :-)</h3>
+                <h3 class='card-title mb-4'>Enjoy! :-)</h3>
                 <p class='card-text mb-0'>*gratefully gathered from <em>The Vegetarian Flavor Bible</em> (Page, 2014)</p>
                 <p class='card-text'>**shamelessly adapted from <em>Tassajara Cooking</em> (Brown, 1974)</p>
             </div>
         </div>
-        <div id='recipe-window' class="card shadow">
-            <div id='recipe-header' class="card-header">
+        <div id='recipe-window' class='card shadow'>
+            <div id='recipe-header' class='card-header'>
                 Recipe
-                <button id='recipe-close' type="button" class="btn btn-sm btn-danger float-right">Close</button>
+                <button id='recipe-close' type='button' class='btn btn-sm btn-danger float-right'>Close</button>
             </div>
-            <div id='recipe-body' class="card-body">
-                <h5 class="card-title">Ingredients:</h5>
+            <div id='recipe-body' class='card-body'>
+                <h5 class='card-title'>Ingredients:</h5>
                 <ul id='ingredients-list'>
                 </ul>
-                <h5 class="card-title">Notes:</h5>
+                <h5 class='card-title'>Notes:</h5>
                 <ul>
                     <li>Stir-frying (aka sautéing) mostly involves frying vegetables in oil, over high heat. To do it by the book (specifically <em>Tassajara Cooking</em>, Brown 1974), the veg must be dry and not piled up; if the pieces don't have continuous contact with the pan, the ones on top will be steaming. For crunchy veg like broccoli you'll want to turn off the heat while it's still a little undercooked, since it'll keep cooking some while it cools down.</li>
                     <li>Timing and seasoning are the big challenges for me, and it's even trickier with the diversity (and sometimes weirdness) of generated recicpes. The best I can offer is:</li>
@@ -81,7 +81,7 @@
                     </ol>
                     <li>Oh, and another note on herbs/spices: these can be added mid or late. Adding earlier means more flavor blending, later means more flavor. And ground up stuff takes less cooking.</li>
                 </ul>
-                <h5 class="card-title">Instructions:</h5>
+                <h5 class='card-title'>Instructions:</h5>
                 <ol>
                     <li>Pre: Heat pan, then add oil. Just barely cover the pan, a little goes a long way.</li>
                     <li>Early stage (4-8 mins): Add stuff like onions, that you really want to caramelize and/or fry. I like to add any mushrooms in at this stage, to get that strong nutty flavor. Tofu and potatoes can also fit here, especially with larger chunks. Eggplant too, but that's complicated.</li>
@@ -90,28 +90,34 @@
                     <li>Flavoring: Salt, vinegar, tamari - whatever's needed to get the taste you want. Also things that don't need cooking - fruits, nuts, seeds, fennel, stuff like that. It can be fun to use garnishes (eg. chopped chives, fennel, mint, lemon slices) to make a plate of food look pretty!</li>
                     <li>Sides: I forgot to work this in earlier, but if a generated recipe includes <strong>grains</strong> and/or <strong>beans/peas/lentils</strong>, these things can either be added in the late stage <em>or</em> served as a side. Serving these as sides (with a little salt or oil or whatever, maybe a pretty garnish) can add some nice diversity to a meal. Remember to start these a lot earlier if they need cooking! I hope to add more specific instructions at some point, but for now you'll need to look up the specific how-to's.</li>
                 </ol>
-                <h5 class="card-title">Bon voyage :-)</h5>
+                <h5 class='card-title'>Bon voyage :-)</h5>
             </div>
         </div>
         <div id='main' class='row'>
-            <div id='controls' class='col-2 p-3 shadow'>
+            <div id='controls' class='col-4 col-xl-3 p-3 shadow'>
                 <div id='present'></div>
-                <button id='all' type="button" class="btn btn-secondary mt-3 mr-1">All</button>
-                <button id='none' type="button" class="btn btn-secondary mt-3">None</button><br>
-                <button id='save' type="button" class="btn btn-secondary mt-3 mr-1">Save</button>
-                <button id='load' type="button" class="btn btn-secondary mt-3">Load</button><br>
-                <button id='generate' type="button" class="btn btn-danger mt-3">Generate stir-fry</button><br>
-                <button id='recipe' type="button" class="btn btn-warning mt-3">Get recipe</button><br>
-                <button id='about' type="button" class="btn btn-secondary mt-3">About</button>
-                <a id='salad' class="btn btn-success mr-3 mb-3" href="/salad" role="button">Salad mode</a>
+                <button id='all' type='button' class='btn btn-secondary mt-3 mr-1'>All</button>
+                <button id='none' type='button' class='btn btn-secondary mt-3'>None</button><br>
+                <button id='save' type='button' class='btn btn-secondary mt-3 mr-1'>Save</button>
+                <button id='load' type='button' class='btn btn-secondary mt-3'>Load</button><br>
+                <div id='generate-wrapper' class='card border-danger mt-3'>
+                    <div id='generate-text' class='card-header text-white bg-danger'>Generate</div>
+                    <div class='card-body'>
+                        <button id='generate-fun' type='button' class='btn btn-secondary'>Fun stir-fry</button><br>
+                        <button id='generate-reliable' type='button' class='btn btn-secondary mt-2'>Reliable stir-fry</button><br>
+                    </div>
+                </div>
+                <button id='recipe' type='button' class='btn btn-warning mt-3'>Get recipe</button><br>
+                <button id='about' type='button' class='btn btn-secondary mt-3'>About</button>
+                <a id='salad' class='btn btn-success mr-3 mb-3' href='/salad' role='button'>Go to salad mode</a>
             </div>
             <div id='not-controls' class='col'>
                 <div id='menu-wrapper'>
                     <div id='menu'>
-                        <p><button id='remove' type="button" class="btn btn-primary shadow">Remove</button></p>
-                        <p><button id='select' type="button" class="btn btn-primary shadow">Select</button></p>
-                        <p><button id='lock' type="button" class="btn btn-primary shadow">Lock</button></p>
-                        <p><button id='connect' type="button" class="btn btn-primary shadow">Connect</button></p>
+                        <p><button id='remove' type='button' class='btn btn-primary shadow'>Remove</button></p>
+                        <p><button id='select' type='button' class='btn btn-primary shadow'>Select</button></p>
+                        <p><button id='lock' type='button' class='btn btn-primary shadow'>Lock</button></p>
+                        <p><button id='connect' type='button' class='btn btn-primary shadow'>Connect</button></p>
                     </div>
                 </div>
                 <div id='network'></div>

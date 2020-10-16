@@ -610,12 +610,16 @@ var StirFryManager = function() {
     });
 
     self.generating = false;
-
-    self.generate = function() {
+    self.default_method = 'reliable';
+    self.generate = function(method) {
+        // console.log('GENERATING')
         if (!self.generating) {
+            // console.log('not already generating')
             self.generating = true;
             $('#generating').show();
-            fetch('/generate-stir-fry', {
+            self.default_method = method;
+            url = (method == 'fun') ? '/generate-stir-fry' : '/generate-stir-fry-black-magic';
+            fetch(url, {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json',
@@ -626,13 +630,16 @@ var StirFryManager = function() {
                     locked: self.getLockedNames()
                 })
             }).then(function(response) {
+                // console.log('dealing with response errors')
                 if (!response.ok) {
                     throw Error(response.statusText);
                 }
                 return response;
             }).then(function(response) {
+                // console.log('dealing with response')
                 return response.json();
             }).then(function(json) {
+                // console.log('dealing with json')
                 var presentNames = json['present_names'];
                 var selectedNames = json['selected_names'];
                 var lockedNames = json['locked_names'];
@@ -671,8 +678,12 @@ var StirFryManager = function() {
         }
     }
 
-    $('#generate').click(function() {
-        self.generate();
+    $('#generate-fun').click(function() {
+        self.generate('fun');
+    });
+
+    $('#generate-reliable').click(function() {
+        self.generate('reliable');
     });
 
     $('body').keydown(function(event){
@@ -683,7 +694,7 @@ var StirFryManager = function() {
         if (spacebar && (!searching || emptySearch)) {
             $('#present').selectivity('close');
             activeElement.blur()
-            self.generate();
+            self.generate(self.default_method);
         }
     });
 
