@@ -62,7 +62,8 @@ def generate_salad():
     n_gen_extras_min = max(2-len(locked_extras), 0)
     n_gen_extras_max = max(4-len(locked_extras), 0)
 
-    n_iterations = len(present_names)*3
+    # *3: times out at 30s with all ingredients
+    n_iterations = len(present_names)*2
     keep_iterating = True
 
     n_attempts_before_deciding = 10
@@ -354,8 +355,8 @@ def generate_stir_fry():
     n_gen_foodstuffs_min = max(3 - len(locked_foodstuffs), 0)
     n_gen_foodstuffs_max = max(7 - len(locked_foodstuffs), 0)
 
-    n_iterations = len(present_names)*3
-    # n_iterations = 100
+    # *3: 2-25s with all ingredients
+    n_iterations = len(present_names)*2
     keep_iterating = True
 
     n_attempts_before_deciding = 10
@@ -782,8 +783,8 @@ def generate_stir_fry_black_magic():
     ok_cliques = ok_cliques[ok_cliques['ok_list'].apply(lambda x: len(x) >= 2)]
     ok_cliques = ok_cliques.sort_values('ok_score', ascending=False)
 
-    n_iterations = len(present_names)*2
-    # n_iterations = 100
+    # *2: 20-25s with all ingredients
+    n_iterations = len(present_names)
     keep_iterating = True
 
     n_attempts_before_deciding = 10
