@@ -361,7 +361,7 @@ def generate_stir_fry():
     # *2: 20s with all ingredients
     # *1.5: 20s with all ingredients???
     # *1: 10s with all ingredients? ugh. 1.5 must have been wrong somehow, guess I'll go with that.
-    n_iterations = (len(present_names)*1.5)
+    n_iterations = round(len(present_names)*1.5)
     keep_iterating = True
 
     n_attempts_before_deciding = 10
