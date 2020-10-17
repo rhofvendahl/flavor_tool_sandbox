@@ -65,7 +65,7 @@ def generate_salad():
     # *3: times out at 30s with all ingredients
     # *2: 25s with all ingredients
     # *1: 10-15s with all ingredients
-    n_iterations = len(present_names)
+    n_iterations = round(len(present_names)*1.5)
     keep_iterating = True
 
     n_attempts_before_deciding = 10
@@ -359,7 +359,7 @@ def generate_stir_fry():
 
     # *3: 25s with all ingredients
     # *2: 20s with all ingredients
-    # *1.5: 20s with all ingredients???
+    # *1.5: 20s with all ingredients??? yep, second round confirms it.
     # *1: 10s with all ingredients? ugh. 1.5 must have been wrong somehow, guess I'll go with that.
     n_iterations = round(len(present_names)*1.5)
     keep_iterating = True
@@ -789,7 +789,7 @@ def generate_stir_fry_black_magic():
     ok_cliques = ok_cliques.sort_values('ok_score', ascending=False)
 
     # *2: 25s with all ingredients
-    # *1: 15-20s with all ingredients
+    # *1: 15s with all ingredients
     n_iterations = len(present_names)
     keep_iterating = True
 
