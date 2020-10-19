@@ -1,6 +1,11 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 
+@app.before_request
+def force_https():
+    if 'www.flavortool.com' in request.url and not request.is_secure:
+        return redirect(request.url.replace('http://', 'https://'))
+
 import pandas as pd
 import networkx as nx
 import os
@@ -14,6 +19,7 @@ stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_fla
 
 @app.route('/')
 def root():
+    print(request.url)
     return redirect(url_for('stir_fry_index'))
 
 @app.route('/salad')
