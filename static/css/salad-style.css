@@ -39,6 +39,7 @@ body {
 
 #not-controls {
     position: relative;
+    padding: 0;
 }
 
 #menu-wrapper {
