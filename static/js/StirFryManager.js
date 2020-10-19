@@ -667,6 +667,13 @@ var StirFryManager = function() {
                 $('#generating').hide();
                 self.generating = false;
                 self.saveProjectToLocalStorage('');
+
+                setTimeout(function() {
+                    self.network.fit({
+                        nodes: selectedNames,
+                        animation: true
+                    });
+                }, 2000);
             }).catch(function(error) {
                 console.log(error);
                 alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
