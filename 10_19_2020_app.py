@@ -71,7 +71,7 @@ def generate_salad():
     # *3: times out at 30s with all ingredients
     # *2: 25s with all ingredients
     # *1: 10-15s with all ingredients
-    n_iterations = 300
+    n_iterations = round(len(present_names)*1.5)
     keep_iterating = True
 
     n_attempts_before_deciding = 10
@@ -385,13 +385,6 @@ def generate_stir_fry():
     locked_names = content['locked']
     present_names = content['present']
 
-    if len(present_names) < 7:
-        data = {
-            'outcome': 'failure',
-            'message': "You'll need to add a few more ingredients before you can generate a recipe.",
-        }
-        return(jsonify(data))
-
     stir_fry_data = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
     # stir_fry_data.reset_index(inplace=True)
 
@@ -407,176 +400,175 @@ def generate_stir_fry():
     the_rest_other_flavorings = the_rest[(the_rest['stir_fry_flavoring'] == 'y') & (the_rest['stir_fry_salt'] != 'y')]
     the_rest_foodstuffs = the_rest[(the_rest['stir_fry_fat_oil'] != 'y') & (the_rest['stir_fry_salt'] != 'y') & (the_rest['stir_fry_flavoring'] != 'y')]
 
-    n_additional_salts_needed = max(n_salts - len(locked_salts), 0)
-    n_additional_salts_actual = min(n_additional_salts_needed, len(the_rest_salts))
-    n_total_salts_actual = n_additional_salts_actual + len(locked_salts)
+    n_gen_salts = max(1 - len(locked_salts), 0)
+    n_gen_fat_oils = max(1 - len(locked_fat_oils), 0)
+    n_gen_other_flavorings_min = max(1 - len(locked_other_flavorings), 0)
+    n_gen_other_flavorings_max = max(3 - len(locked_other_flavorings), 0)
+    n_gen_foodstuffs_min = max(3 - len(locked_foodstuffs), 0)
+    n_gen_foodstuffs_max = max(7 - len(locked_foodstuffs), 0)
 
-    n_additional_fat_oils_needed = max(n_fat_oils - len(locked_fat_oils), 0)
-    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(the_rest_fat_oils))
-    n_total_fat_oils_actual = n_additional_fat_oils_actual + len(locked_fat_oils)
+    # *3: 25s with all ingredients
+    # *2: 20s with all ingredients
+    # *1.5: 20s with all ingredients??? yep, second round confirms it.
+    # *1: 10s with all ingredients? ugh. 1.5 must have been wrong somehow, guess I'll go with that.
+    n_iterations = round(len(present_names)*1.5)
+    keep_iterating = True
 
-    n_additional_other_flavorings_needed_min = max(n_other_flavorings_min - len(locked_other_flavorings), 0)
-    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(the_rest_other_flavorings))
-    n_total_other_flavorings_actual_min = n_additional_other_flavorings_actual_min + len(locked_other_flavorings)
+    n_attempts_before_deciding = 10
+    n_attempts_before_giving_up = 5
 
-    n_additional_other_flavorings_needed_max = max(n_other_flavorings_max - len(locked_other_flavorings), 0) # yikes, I had this as min..
-    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(the_rest_other_flavorings))
-    n_total_other_flavorings_actual_max = n_additional_other_flavorings_actual_max + len(locked_other_flavorings)
-
-    n_additional_foodstuffs_needed_min = max(n_foodstuffs_min - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(the_rest_foodstuffs))
-    n_total_foodstuffs_actual_min = n_additional_foodstuffs_actual_min + len(locked_foodstuffs)
-
-    n_additional_foodstuffs_needed_max = max(n_foodstuffs_max - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(the_rest_foodstuffs))
-    n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
-
-    n_iterations = 300
+    scoring_method = 'tbd'
     top_score = None
+
     for iteration in range(n_iterations):
-        n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
-        n_additional_foodstuffs_actual = random.randrange(n_additional_foodstuffs_actual_min, n_additional_foodstuffs_actual_max+1)
+        # print('ITERATION START')
+        # n_subgraphs = 2
+        connection_attempt = 1
+        while True:
+            # print('TRYING TO CONNECT')
+            n_gen_other_flavorings = min(random.randrange(n_gen_other_flavorings_min, n_gen_other_flavorings_max+1), len(the_rest_other_flavorings))
+            n_gen_foodstuffs = min(random.randrange(n_gen_foodstuffs_min, n_gen_foodstuffs_max+1), len(the_rest_foodstuffs))
 
-        selected_ingredients = pd.DataFrame(columns=stir_fry_flavor_data.columns)
-        if n_additional_salts_actual > 0:
-            selected_salts = locked_salts.append(the_rest_salts.sample(n_additional_salts_actual))
-            selected_ingredients = selected_ingredients.append(selected_salts)
-        if n_additional_fat_oils_actual > 0:
-            selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
-            selected_ingredients = selected_ingredients.append(selected_fat_oils)
-        if n_additional_other_flavorings_actual > 0:
-            selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
-            selected_ingredients = selected_ingredients.append(selected_other_flavorings)
-        if n_additional_foodstuffs_actual > 0:
-            selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
-            selected_ingredients = selected_ingredients.append(selected_foodstuffs)
+            selected_salts = locked_salts.append(the_rest_salts.sample(n_gen_salts))
+            selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_gen_fat_oils))
+            selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_gen_other_flavorings))
+            selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_gen_foodstuffs))
+            selected_ingredients = selected_salts.append(selected_fat_oils).append(selected_other_flavorings).append(selected_foodstuffs)
+            selected_names = selected_ingredients['name'].values.tolist()
+            # print('SELECTED NAMES', selected_names)
 
-        selected_names = selected_ingredients['name'].values.tolist()
+            # lower_category_pairs = []
+            # lower_direct_pairs = []
+            # upper_category_pairs = []
+            # upper_direct_pairs = []
+            #
+            # # finicky but pretty fast
+            # for i, col_name in enumerate(selected_names):
+            #     for j, row_name in enumerate(selected_names[i+1:]):
+            #         connection = selected_ingredients[col_name].tolist()[i+1+j] # this is what is finicky
+            #         print('CONNECTION', connection)
+            #         if connection == 'c':
+            #             lower_category_pairs.append((col_name, row_name,))
+            #         elif connection == 'd':
+            #             lower_direct_pairs.append((col_name, row_name,))
+            #         elif connection == 'C':
+            #             upper_category_pairs.append((col_name, row_name,))
+            #         elif connection == 'D':
+            #             upper_direct_pairs.append((col_name, row_name,))
+            # lower_pairs = lower_category_pairs + lower_direct_pairs
+            # upper_pairs = upper_category_pairs + upper_direct_pairs
+            # all_pairs = lower_pairs + upper_pairs
+            # print('ALL PAIRS', all_pairs)
+            # selected_g = nx.Graph()
+            # selected_g.add_nodes_from(selected_names)
+            # selected_g.add_edges_from(lower_category_pairs, length=2)
+            # selected_g.add_edges_from(lower_direct_pairs, length=1.5)
+            # selected_g.add_edges_from(upper_category_pairs, length=1.2)
+            # selected_g.add_edges_from(upper_direct_pairs, length=1)
+            # connected_components = list(nx.connected_components(selected_g))
 
-        # selected_salts = locked_salts.append(the_rest_salts.sample(n_gen_salts))
-        # selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_gen_fat_oils))
-        # selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_gen_other_flavorings))
-        # selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_gen_foodstuffs))
-        # selected_ingredients = selected_salts.append(selected_fat_oils).append(selected_other_flavorings).append(selected_foodstuffs)
-        # selected_names = selected_ingredients['name'].values.tolist()
-        # print('SELECTED NAMES', selected_names)
+            connections = []
+            weighted_edges = []
 
-        # lower_category_pairs = []
-        # lower_direct_pairs = []
-        # upper_category_pairs = []
-        # upper_direct_pairs = []
-        #
-        # # finicky but pretty fast
-        # for i, col_name in enumerate(selected_names):
-        #     for j, row_name in enumerate(selected_names[i+1:]):
-        #         connection = selected_ingredients[col_name].tolist()[i+1+j] # this is what is finicky
-        #         print('CONNECTION', connection)
-        #         if connection == 'c':
-        #             lower_category_pairs.append((col_name, row_name,))
-        #         elif connection == 'd':
-        #             lower_direct_pairs.append((col_name, row_name,))
-        #         elif connection == 'C':
-        #             upper_category_pairs.append((col_name, row_name,))
-        #         elif connection == 'D':
-        #             upper_direct_pairs.append((col_name, row_name,))
-        # lower_pairs = lower_category_pairs + lower_direct_pairs
-        # upper_pairs = upper_category_pairs + upper_direct_pairs
-        # all_pairs = lower_pairs + upper_pairs
-        # print('ALL PAIRS', all_pairs)
-        # selected_g = nx.Graph()
-        # selected_g.add_nodes_from(selected_names)
-        # selected_g.add_edges_from(lower_category_pairs, length=2)
-        # selected_g.add_edges_from(lower_direct_pairs, length=1.5)
-        # selected_g.add_edges_from(upper_category_pairs, length=1.2)
-        # selected_g.add_edges_from(upper_direct_pairs, length=1)
-        # connected_components = list(nx.connected_components(selected_g))
+            for i_1, name_1 in enumerate(selected_names[:-1]):
+                # print('NAME 1', name_1)
+                for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
+                    # print('NAME 2', name_2)
+                    # print('STIR FRY FLAVOR DATA INDEX', stir_fry_flavor_data.index)
+                    # print('SELECTED INGREDIENTS NAME 1', selected_ingredients[name_1], type(selected_ingredients[name_1]), list(selected_ingredients[name_1]))
+                    connection = selected_ingredients[name_1][name_2]
 
+                    if connection[0] != '_':
+                        if connection[0] == 'c':
+                            pairs_with_demerit = .6 # prev .8
+                        elif connection[0] == 'd':
+                            pairs_with_demerit = .5 # prev .6666
+                        elif connection[0] == 'C':
+                            pairs_with_demerit = .4 # prev .5333
+                        elif connection[0] == 'D':
+                            pairs_with_demerit = .3 # prev. .4
+                        else:
+                            print('OH NO! BAD PAIRING VALUE.')
 
-        selected_g = nx.Graph()
-        selected_g.add_nodes_from(selected_names)
+                        if connection[1] == '_':
+                            strength_demerit = .2
+                        elif connection[1] == 's':
+                            strength_demerit = .15
+                        elif connection[1] == 'S':
+                            strength_demerit = .1
+                        else:
+                            print('OH NO! BAD STRENGTH VALUE.')
 
-        for i_1, name_1 in enumerate(selected_names[:-1]):
-            for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
-                connection = selected_ingredients[name_1][name_2]
+                        # idea is that if 1+ names are locked, their connections will weigh score down less
+                        if name_1 in locked_names and name_2 in locked_names:
+                            locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
+                        elif name_1 in locked_names or name_2 in locked_names:
+                            locked_demerit = .15
+                        else:
+                            locked_demerit = .2
 
-                # Weights super guess-y
-                if connection[0] == 'c':
-                    selected_g.add_edge(name_1, name_2, length=1, weight=.4) # prev .8
-                elif connection[0] == 'd':
-                    # pairs_with_demerit = .5 # prev .6666
-                    selected_g.add_edge(name_1, name_2, length=.8, weight=.6) # prev .8
-                elif connection[0] == 'C':
-                    # pairs_with_demerit = .4 # prev .5333
-                    selected_g.add_edge(name_1, name_2, length=.6, weight=.8) # prev .8
-                elif connection[0] == 'D':
-                    # pairs_with_demerit = .3 # prev. .4
-                    selected_g.add_edge(name_1, name_2, length=.4, weight=1) # prev .8
+                        connection_weight = pairs_with_demerit + strength_demerit + locked_demerit
+                        weighted_edges.append((name_1, name_2, connection_weight))
+                        connections.append((name_1, name_2, connection))
 
-        # connections = []
-        # weighted_edges = []
-        #
-        # for i_1, name_1 in enumerate(selected_names[:-1]):
-        #     # print('NAME 1', name_1)
-        #     for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
-        #         # print('NAME 2', name_2)
-        #         # print('STIR FRY FLAVOR DATA INDEX', stir_fry_flavor_data.index)
-        #         # print('SELECTED INGREDIENTS NAME 1', selected_ingredients[name_1], type(selected_ingredients[name_1]), list(selected_ingredients[name_1]))
-        #         connection = selected_ingredients[name_1][name_2]
-        #         if connection[0] != '_':
-        #             if connection[0] == 'c':
-        #                 pairs_with_demerit = .6 # prev .8
-        #             elif connection[0] == 'd':
-        #                 pairs_with_demerit = .5 # prev .6666
-        #             elif connection[0] == 'C':
-        #                 pairs_with_demerit = .4 # prev .5333
-        #             elif connection[0] == 'D':
-        #                 pairs_with_demerit = .3 # prev. .4
-        #             else:
-        #                 print('CONNECTION', type(connection[0]), connection[0], type(connection), connection)
-        #                 print('OH NO! BAD PAIRING VALUE.')
-        #
-        #             if connection[1] == '_':
-        #                 strength_demerit = .2
-        #             elif connection[1] == 's':
-        #                 strength_demerit = .15
-        #             elif connection[1] == 'S':
-        #                 strength_demerit = .1
-        #             else:
-        #                 print('OH NO! BAD STRENGTH VALUE.')
-        #
-        #             # idea is that if 1+ names are locked, their connections will weigh score down less
-        #             if name_1 in locked_names and name_2 in locked_names:
-        #                 locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
-        #             elif name_1 in locked_names or name_2 in locked_names:
-        #                 locked_demerit = .15
-        #             else:
-        #                 locked_demerit = .2
-        #
-        #             connection_weight = pairs_with_demerit + strength_demerit + locked_demerit
-        #             weighted_edges.append((name_1, name_2, connection_weight))
-        #             connections.append((name_1, name_2, connection))
-        #
-        # selected_g = nx.Graph()
-        # selected_g.add_nodes_from(selected_names)
-        # selected_g.add_weighted_edges_from(weighted_edges)
-        # connected_components = list(nx.connected_components(selected_g))
+            selected_g = nx.Graph()
+            selected_g.add_nodes_from(selected_names)
+            selected_g.add_weighted_edges_from(weighted_edges)
+            connected_components = list(nx.connected_components(selected_g))
 
-        # Try again, friend
-        if not nx.is_connected(selected_g):
-            print(str(iteration)+': NOT CONNECTED; SKIPPING TO NEXT ITERATION')
-            continue
+            if scoring_method == 'tbd':
+                if len(connected_components) == 1:
+                    # print('Scoring method set to "connected"')
+                    scoring_method = 'connected'
+                    break
+                elif connection_attempt >= n_attempts_before_deciding:
+                    print('Scoring method set to "disconnected"')
+                    scoring_method = 'disconnected'
+                    break
+            elif scoring_method == 'connected':
+                if len(connected_components) == 1:
+                    break
+                elif connection_attempt >= n_attempts_before_giving_up:
+                    print('Giving up')
+                    keep_iterating = False
+                    break
+            elif scoring_method == 'disconnected':
+                # print('SCORING METHOD DISCONNECTED')
+                break
+
+            connection_attempt += 1
+
+        # print('DONE WITH CONNECTION LOOP HOPEFULLY')
+        if not keep_iterating:
+            break # Just go with the best iteration so far (rather than slogging through disconnected graphs)
 
         score = 0
 
-        # CONNECTED PAIRING BONUS ==============================================
-        # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
-        # and also encompasses strength-ness and locked-ness
-        # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
-        average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
-        # print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
-        average_shortest_path_score = 1 / average_shortest_path_length * 2 - 1.3
-        # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
-        score += average_shortest_path_score * 5
+    # TODO test to normalize these scores (done, I think?)
+        if scoring_method == 'connected':
+            # CONNECTED PAIRING BONUS ============================================================================================
+            # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
+            # and also encompasses strength-ness and locked-ness
+            # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
+            average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='weight')
+            # print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
+            average_shortest_path_score = 1 / average_shortest_path_length * 2 - 1.3
+            # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
+            score += average_shortest_path_score * 5
+        else:
+            # DISCONNECTED PAIRING BONUS ============================================================================================
+            # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
+            # and also encompasses strength-ness and locked-ness
+            # not really sure how this sranges. hopefully (0 - 1) * 3? Hard to test.
+            largest_cc = max(connected_components, key=len)
+            # print('CONNECTED COMPONENTS', connected_components)
+            # print('LARGEST CC', largest_cc)
+            largest_subgraph = selected_g.subgraph(largest_cc) # .copy()?
+            largest_subgraph_g = nx.Graph(largest_subgraph)
+            average_shortest_path_length = nx.average_shortest_path_length(largest_subgraph_g, weight='weight')
+            average_shortest_path_score = 1 / average_shortest_path_length * 2 - 1.3
+            # print('DISCONNECTED AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
+            score += average_shortest_path_score * 5
 
     # FLAVOR BALANCE BONUS =============================================================================================
     # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -630,30 +622,27 @@ def generate_stir_fry():
 
         if top_score == None or score > top_score:
             top_selected_ingredients = selected_ingredients
-            top_pairing_score = average_shortest_path_score
-            top_flavor_score = flavor_score
-            top_food_group_score = food_group_score
+            top_pairing_bonus = average_shortest_path_score
+            top_flavor_bonus = flavor_score
+            top_food_group_bonus = food_group_score
             top_score = score
+        # print()
 
-    if top_score:
-        data = {
-            'outcome': 'success',
-            'data': {
-                'present_names': present_names,
-                'locked_names': locked_names,
-                'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
-                # 'pairing_bonus': top_average_shortest_path_score,
-                'flavor_bonus': top_flavor_score,
-                'food_group_bonus': top_food_group_score,
-                'score': top_score,
-                'selected_names': top_selected_ingredients['name'].tolist(),
-            },
-        }
-    else:
-        data = {
-            'outcome': 'failure',
-            'message': "Darn! The generator isn't coming up with anything for these ingredients.",
-        }
+    # print('PAIRING BONUS', top_pairing_bonus)
+    # print('FLAVOR BALANCE BONUS', top_flavor_bonus)
+    # print('FOOD GROUP BONUS', top_food_group_bonus)
+    # print('SCORE', top_score)
+    data = {
+        'present_names': present_names,
+        'selected_names': top_selected_ingredients['name'].tolist(),
+        'locked_names': locked_names,
+        'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
+        'pairing_bonus': top_pairing_bonus,
+        'flavor_bonus': top_flavor_bonus,
+        'food_group_bonus': top_food_group_bonus,
+        'score': top_score
+    }
+    # print(data)
     return(jsonify(data))
 
 # BLACK MAGIC SETUP ============================================================
@@ -715,23 +704,20 @@ def get_first_name_in_set(sorted_tuples, food_set):
 
 @app.route('/generate-stir-fry-black-magic', methods=['POST'])
 def generate_stir_fry_black_magic():
+# TODO: account for if connected subgraph is impossible
     content = request.get_json()
     locked_names = content['locked']
     present_names = content['present']
-    print('PRESENT NAME LEN', len(present_names))
 
-    if len(present_names) < 7:
-        data = {
-            'outcome': 'failure',
-            'message': "You'll need to add a few more ingredients before you can generate a recipe.",
-        }
-        return(jsonify(data))
-
+    # stir_fry_data = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
+    # n_present = len(present_names)
     present = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
     present_set = set(present_names)
     present_strong_set = set(present[present['strong'].isin(['Y', 'y'])]['name'])
     not_present_set = set(stir_fry_flavor_data['name']) - present_set
+    # present_shortest_path_lengths = {key: stir_fry_shortest_path_lengths[key] for key in stir_fry_shortest_path_lengths if key in present_set}
 
+    # n_locked = len(locked_names)
     locked = present[present['name'].isin(locked_names)]
     locked_set = set(locked_names)
     locked_fat_oils = locked[locked['stir_fry_fat_oil'] == 'y']
@@ -754,29 +740,29 @@ def generate_stir_fry_black_magic():
     the_rest_other_flavorings_set = set(the_rest_other_flavorings['name'])
     the_rest_foodstuffs_set = set(the_rest_foodstuffs['name'])
 
-    n_additional_salts_needed = max(n_salts - len(locked_salts), 0)
-    n_additional_salts_actual = min(n_additional_salts_needed, len(the_rest_salts))
-    n_total_salts_actual = n_additional_salts_actual + len(locked_salts)
+    # Are these being used?
+    # the_rest_weak = present[~present['strong'].isin(['y', 'Y'])]
+    # the_rest_weak_set = set(the_rest_weak['name'])
+    # the_rest_weak_fat_oils = the_rest_weak[the_rest_weak['stir_fry_fat_oil'] == 'y']
+    # the_rest_weak_salts = the_rest_weak[the_rest_weak['stir_fry_salt'] == 'y']
+    # the_rest_weak_other_flavorings = the_rest_weak[(the_rest_weak['stir_fry_flavoring'] == 'y') & (the_rest_weak['stir_fry_salt'] != 'y')]
+    # the_rest_weak_foodstuffs = the_rest_weak[(the_rest_weak['stir_fry_fat_oil'] != 'y') & (the_rest_weak['stir_fry_salt'] != 'y') & (the_rest_weak['stir_fry_flavoring'] != 'y')]
 
-    n_additional_fat_oils_needed = max(n_fat_oils - len(locked_fat_oils), 0)
-    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(the_rest_fat_oils))
-    n_total_fat_oils_actual = n_additional_fat_oils_actual + len(locked_fat_oils)
+    n_gen_salts = max(n_salts - len(locked_salts), 0)
+    n_gen_fat_oils = max(n_fat_oils - len(locked_fat_oils), 0)
+    n_gen_other_flavorings_min = max(n_other_flavorings_min - len(locked_other_flavorings), 0)
+    n_gen_other_flavorings_max = max(n_other_flavorings_max - len(locked_other_flavorings), 0) # yikes, I had this as min..
+    n_gen_foodstuffs_min = max(n_foodstuffs_min - len(locked_foodstuffs), 0)
+    n_gen_foodstuffs_max = max(n_foodstuffs_max - len(locked_foodstuffs), 0)
 
-    n_additional_other_flavorings_needed_min = max(n_other_flavorings_min - len(locked_other_flavorings), 0)
-    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(the_rest_other_flavorings))
-    n_total_other_flavorings_actual_min = n_additional_other_flavorings_actual_min + len(locked_other_flavorings)
+    n_salts_actual = max(n_salts, len(locked_salts))
+    n_fat_oils_actual = max(n_fat_oils, len(locked_fat_oils))
 
-    n_additional_other_flavorings_needed_max = max(n_other_flavorings_max - len(locked_other_flavorings), 0) # yikes, I had this as min..
-    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(the_rest_other_flavorings))
-    n_total_other_flavorings_actual_max = n_additional_other_flavorings_actual_max + len(locked_other_flavorings)
-
-    n_additional_foodstuffs_needed_min = max(n_foodstuffs_min - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(the_rest_foodstuffs))
-    n_total_foodstuffs_actual_min = n_additional_foodstuffs_actual_min + len(locked_foodstuffs)
-
-    n_additional_foodstuffs_needed_max = max(n_foodstuffs_max - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(the_rest_foodstuffs))
-    n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
+    # not totally sure thesse are right (that both min and max are compared to locked)
+    n_other_flavorings_min_actual = max(n_other_flavorings_min, len(locked_other_flavorings))
+    n_other_flavorings_max_actual = max(n_other_flavorings_max, len(locked_other_flavorings))
+    n_foodstuffs_min_actual = max(n_foodstuffs_min, len(locked_foodstuffs))
+    n_foodstuffs_max_actual = max(n_foodstuffs_max, len(locked_foodstuffs))
 
     ok_cliques = reasonable_clique_upper[:1000].copy()
 
@@ -794,22 +780,22 @@ def generate_stir_fry_black_magic():
         updated_n_foodstuffs = len(updated_foodstuffs_set)
 
         n_salts_so_far = len(updated_salts_set.union(locked_salts_set))
-        n_salts_to_remove = max(n_salts_so_far - n_total_salts_actual, 0)
+        n_salts_to_remove = max(n_salts_so_far - n_salts_actual, 0)
         salts_to_remove_from_set = updated_salts_set - locked_salts_set
         more_salts_to_remove_set = set(random.sample(salts_to_remove_from_set, n_salts_to_remove))
 
         n_fat_oils_so_far = len(updated_fat_oils_set.union(locked_fat_oils_set))
-        n_fat_oils_to_remove = max(n_fat_oils_so_far - n_total_fat_oils_actual, 0)
+        n_fat_oils_to_remove = max(n_fat_oils_so_far - n_fat_oils_actual, 0)
         fat_oils_to_remove_from_set = updated_fat_oils_set - locked_fat_oils_set
         more_fat_oils_to_remove_set = set(random.sample(fat_oils_to_remove_from_set, n_fat_oils_to_remove))
 
         n_other_flavorings_so_far = len(updated_other_flavorings_set.union(locked_other_flavorings_set))
-        n_other_flavorings_to_remove = max(n_other_flavorings_so_far - n_total_other_flavorings_actual_max, 0) # is this right?
+        n_other_flavorings_to_remove = max(n_other_flavorings_so_far - n_other_flavorings_max_actual, 0) # is this right?
         other_flavorings_to_remove_from_set = updated_other_flavorings_set - locked_other_flavorings_set
         more_other_flavorings_to_remove_set = set(random.sample(salts_to_remove_from_set, n_salts_to_remove))
 
         n_foodstuffs_so_far = len(updated_foodstuffs_set.union(locked_foodstuffs_set))
-        n_foodstuffs_to_remove = max(n_foodstuffs_so_far - n_total_foodstuffs_actual_max, 0) # is this right? thinks so - it's keeping foodstuffs from above max
+        n_foodstuffs_to_remove = max(n_foodstuffs_so_far - n_foodstuffs_max_actual, 0) # is this right? thinks so - it's keeping foodstuffs from above max
         foodstuffs_to_remove_from_set = updated_foodstuffs_set - locked_foodstuffs_set
         more_foodstuffs_to_remove_set = set(random.sample(foodstuffs_to_remove_from_set, n_foodstuffs_to_remove))
 
@@ -841,6 +827,8 @@ def generate_stir_fry_black_magic():
             ok_score,
             ok_score_xtreme,
             ok_n_locked,
+            # ok_score_lockified,
+            # ok_score_lockified_xtreme,
             ok_strong_set,
             ok_n_other_flavorings,
             ok_n_foodstuffs,
@@ -853,6 +841,8 @@ def generate_stir_fry_black_magic():
     ok_cliques['ok_score'] = ok_data.apply(lambda x: x[3])
     ok_cliques['ok_score_xtreme'] = ok_data.apply(lambda x: x[4])
     ok_cliques['ok_n_locked'] = ok_data.apply(lambda x: x[5])
+    # ok_cliques['ok_score_lockified'] = ok_data.apply(lambda x: x[6])
+    # ok_cliques['ok_score_lockified_xtreme'] = ok_data.apply(lambda x: x[7])
     ok_cliques['ok_strong_set'] = ok_data.apply(lambda x: x[6])
     ok_cliques['ok_n_other_flavorings'] = ok_data.apply(lambda x: x[7])
     ok_cliques['ok_n_foodstuffs'] = ok_data.apply(lambda x: x[8])
@@ -860,132 +850,176 @@ def generate_stir_fry_black_magic():
     ok_cliques = ok_cliques[ok_cliques['ok_list'].apply(lambda x: len(x) >= 2)]
     ok_cliques = ok_cliques.sort_values('ok_score', ascending=False)
 
+    # *2: 25s with all ingredients
+    # *1: 15s with all ingredients
+    n_iterations = len(present_names)
+    keep_iterating = True
+
+    n_attempts_before_deciding = 10
+    n_attempts_before_giving_up = 5
+
+    scoring_method = 'tbd'
     top_score = None
-    n_iterations = 200
+
     for iteration in range(n_iterations):
-        n_total_other_flavorings_actual = random.randrange(n_total_other_flavorings_actual_min, n_total_other_flavorings_actual_max+1)
-        n_total_foodstuffs_actual = random.randrange(n_total_foodstuffs_actual_min, n_total_foodstuffs_actual_max+1)
+        connection_attempt = 1
+        while True:
+            n_other_flavorings_actual = random.randrange(n_other_flavorings_min_actual, n_other_flavorings_max_actual+1)
+            n_foodstuffs_actual = random.randrange(n_foodstuffs_min_actual, n_foodstuffs_max_actual+1)
 
-        n_additional_other_flavorings_actual = n_total_other_flavorings_actual - len(locked_other_flavorings)
-        n_additional_foodstuffs_actual = n_total_foodstuffs_actual - len(locked_foodstuffs)
+            n_gen_other_flavorings_actual = n_other_flavorings_actual - len(locked_other_flavorings)
+            n_gen_foodstuffs_actual = n_foodstuffs_actual - len(locked_foodstuffs)
 
-        final_cliques = ok_cliques[(ok_cliques['ok_n_other_flavorings'] <= n_additional_other_flavorings_actual) & (ok_cliques['ok_n_foodstuffs'] <= n_additional_foodstuffs_actual)]
+            final_cliques = ok_cliques[(ok_cliques['ok_n_other_flavorings'] <= n_gen_other_flavorings_actual) & (ok_cliques['ok_n_foodstuffs'] <= n_gen_foodstuffs_actual)]
 
-        if len(final_cliques) > 0: # BLACK MAGIC
-            clique = final_cliques.sample(1, weights='ok_score_xtreme').iloc[0] # using xtreme to skew sample toward top
+            if len(final_cliques) > 0: # BLACK MAGIC
+                # print("1+ MATCHING CLIQUES; LET'S DO MAGIC!")
+                clique = final_cliques.sample(1, weights='ok_score_xtreme').iloc[0] # using xtreme to skew sample toward top
 
-            try:
-                clique_ingredients = present.loc[clique['ok_list']]
-            except:
-                print('MAJOR PROBLEM! Likely cause: clique_data contains not-present ingredients.')
-                clique_ingredients = stir_fry_flavor_data.loc[clique['ok_list']]
+                try:
+                    clique_ingredients = present.loc[clique['ok_list']]
+                except:
+                    print('MAJOR PROBLEM! Likely cause: clique_data contains not-present ingredients.')
+                    clique_ingredients = stir_fry_flavor_data.loc[clique['ok_list']]
 
-            salts_so_far_set = clique['ok_set'].intersection(salt_set).union(locked_salts_set)
-            fat_oils_so_far_set = clique['ok_set'].intersection(fat_oil_set).union(locked_fat_oils_set)
-            other_flavorings_so_far_set = clique['ok_set'].intersection(other_flavoring_set).union(locked_other_flavorings_set)
-            foodstuffs_so_far_set = clique['ok_set'].intersection(foodstuff_set).union(locked_foodstuffs_set)
-            ingredients_so_far_set = clique['ok_set'].union(locked_set)
+                salts_so_far_set = clique['ok_set'].intersection(salt_set).union(locked_salts_set)
+                fat_oils_so_far_set = clique['ok_set'].intersection(fat_oil_set).union(locked_fat_oils_set)
+                other_flavorings_so_far_set = clique['ok_set'].intersection(other_flavoring_set).union(locked_other_flavorings_set)
+                foodstuffs_so_far_set = clique['ok_set'].intersection(foodstuff_set).union(locked_foodstuffs_set)
+                ingredients_so_far_set = clique['ok_set'].union(locked_set)
 
-            n_additional_non_clique_salts = n_total_salts_actual - len(salts_so_far_set) # pretty sure there shouldn't be more salts so far than salts actual
-            n_additional_non_clique_fat_oils = n_total_fat_oils_actual - len(fat_oils_so_far_set) # pretty sure there shouldn't be more salts so far than salts actual
-            n_additional_non_clique_other_flavorings = n_total_other_flavorings_actual - len(other_flavorings_so_far_set)
-            n_additional_non_clique_foodstuffs = n_total_foodstuffs_actual - len(foodstuffs_so_far_set)
+                n_additional_salts = n_salts_actual - len(salts_so_far_set) # pretty sure there shouldn't be more salts so far than salts actual
+                n_additional_fat_oils = n_fat_oils_actual - len(fat_oils_so_far_set) # pretty sure there shouldn't be more salts so far than salts actual
+                n_additional_other_flavorings = max(n_other_flavorings_actual - len(other_flavorings_so_far_set), 0) # pretty sure there shouldn't be more salts so far than salts actual
+                n_additional_foodstuffs = max(n_foodstuffs_actual - len(foodstuffs_so_far_set), 0) # pretty sure there shouldn't be more salts so far than salts actual
 
-            selected_ingredients = present[present['name'].isin(ingredients_so_far_set)]
+                additional_salts = the_rest_salts[~the_rest_salts['name'].isin(clique_ingredients['name'])].sample(n_additional_salts, weights='weak_score')
+                additional_fat_oils = the_rest_fat_oils[~the_rest_fat_oils['name'].isin(clique_ingredients['name'])].sample(n_additional_fat_oils, weights='weak_score')
+                additional_other_flavorings = the_rest_other_flavorings[~the_rest_other_flavorings['name'].isin(clique_ingredients['name'])].sample(n_additional_other_flavorings, weights='weak_score')
+                additional_foodstuffs = the_rest_foodstuffs[~the_rest_foodstuffs['name'].isin(clique_ingredients['name'])].sample(n_additional_foodstuffs, weights='weak_score')
 
-            additional_salts_pool = the_rest_salts[~the_rest_salts['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_salts > 0:
-                additional_salts = additional_salts_pool.sample(n_additional_non_clique_salts, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_salts)
+                ingredients_so_far = present[present['name'].isin(ingredients_so_far_set)]
 
-            additional_fat_oils_pool = the_rest_fat_oils[~the_rest_fat_oils['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_fat_oils > 0:
-                additional_fat_oils = additional_fat_oils_pool.sample(n_additional_non_clique_fat_oils, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_fat_oils)
+                selected_ingredients = ingredients_so_far.append(additional_salts).append(additional_fat_oils).append(additional_other_flavorings).append(additional_foodstuffs)
+            else: # REGULAR
+                # print('NO MATCHING CLIQUES; REGULAR IT IS.')
+                selected_salts = locked_salts.append(the_rest_salts.sample(n_gen_salts))
+                selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_gen_fat_oils))
+                selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_gen_other_flavorings_actual))
+                selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_gen_foodstuffs_actual))
+                selected_ingredients = selected_salts.append(selected_fat_oils).append(selected_other_flavorings).append(selected_foodstuffs)
 
-            additional_other_flavorings_pool = the_rest_other_flavorings[~the_rest_other_flavorings['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_other_flavorings > 0:
-                additional_other_flavorings = additional_other_flavorings_pool.sample(n_additional_non_clique_other_flavorings, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_other_flavorings)
+            selected_names = selected_ingredients['name'].values.tolist()
 
-            additional_foodstuffs_pool = the_rest_foodstuffs[~the_rest_foodstuffs['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_foodstuffs > 0:
-                additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_foodstuffs)
-        else: # REGULAR
-            selected_ingredients = pd.DataFrame(columns=stir_fry_flavor_data.columns)
-            if n_additional_salts_actual > 0:
-                selected_salts = locked_salts.append(the_rest_salts.sample(n_additional_salts_actual))
-                selected_ingredients = selected_ingredients.append(selected_salts)
-            if n_additional_fat_oils_actual > 0:
-                selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
-                selected_ingredients = selected_ingredients.append(selected_fat_oils)
-            if n_additional_other_flavorings_actual > 0:
-                selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
-                selected_ingredients = selected_ingredients.append(selected_other_flavorings)
-            if n_additional_foodstuffs_actual > 0:
-                selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
-                selected_ingredients = selected_ingredients.append(selected_foodstuffs)
+            connections = []
+            weighted_edges = []
+            # locked_demerit_sum = 0
 
-        selected_names = selected_ingredients['name'].values.tolist()
+            for i_1, name_1 in enumerate(selected_names[:-1]):
+                for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
+                    connection = selected_ingredients[name_1][name_2]
 
-        selected_g = nx.Graph()
-        selected_g.add_nodes_from(selected_names)
+                    if connection[0] != '_':
+                        if connection[0] == 'c':
+                            pairs_with_demerit = .6 # prev .8
+                        elif connection[0] == 'd':
+                            pairs_with_demerit = .5 # prev .6666
+                        elif connection[0] == 'C':
+                            pairs_with_demerit = .4 # prev .5333
+                        elif connection[0] == 'D':
+                            print('DIRECT UPPER')
+                            pairs_with_demerit = .3 # prev. .4
+                        else:
+                            print('OH NO! BAD PAIRING VALUE.')
 
-        for i_1, name_1 in enumerate(selected_names[:-1]):
-            for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
-                connection = selected_ingredients[name_1][name_2]
+                        # if connection[1] == '_':
+                        #     strength_demerit = .2
+                        # elif connection[1] == 's':
+                        #     strength_demerit = .15
+                        # elif connection[1] == 'S':
+                        #     strength_demerit = .1
+                        # else:
+                        #     print('OH NO! BAD STRENGTH VALUE.')
 
-                # Weights super guess-y
-                if connection[0] == 'c':
-                    selected_g.add_edge(name_1, name_2, length=1, weight=.4) # prev .8
-                elif connection[0] == 'd':
-                    # pairs_with_demerit = .5 # prev .6666
-                    selected_g.add_edge(name_1, name_2, length=.8, weight=.6) # prev .8
-                elif connection[0] == 'C':
-                    # pairs_with_demerit = .4 # prev .5333
-                    selected_g.add_edge(name_1, name_2, length=.6, weight=.8) # prev .8
-                elif connection[0] == 'D':
-                    # pairs_with_demerit = .3 # prev. .4
-                    selected_g.add_edge(name_1, name_2, length=.4, weight=1) # prev .8
+                        # # idea is that if 1+ names are locked, their connections will weigh score down less
+                        # if name_1 in locked_names and name_2 in locked_names:
+                        #     locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
+                        # elif name_1 in locked_names or name_2 in locked_names:
+                        #     # print('LOCKED AND NOT LOCKED')
+                        #     locked_demerit = .000001
+                        # else:
+                        #     locked_demerit = 2
 
-        # Try again, friend
-        if not nx.is_connected(selected_g):
-            print(str(iteration)+': NOT CONNECTED; SKIPPING TO NEXT ITERATION')
-            continue
+                        # locked_demerit_sum += locked_demerit
+
+                        # do these demerits just incentivize "going around"?
+                        connection_weight = pairs_with_demerit #pairs_with_demerit + strength_demerit + locked_demerit
+                        weighted_edges.append((name_1, name_2, connection_weight))
+                        connections.append((name_1, name_2, connection))
+
+            selected_g = nx.Graph()
+            selected_g.add_nodes_from(selected_names)
+            selected_g.add_weighted_edges_from(weighted_edges)
+            connected_components = list(nx.connected_components(selected_g))
+
+        #     if scoring_method == 'tbd':
+        #         if len(connected_components) == 1:
+        #             # print('Scoring method set to "connected"')
+        #             scoring_method = 'connected'
+        #             break
+        #         elif connection_attempt >= n_attempts_before_deciding:
+        #             print('Scoring method set to "disconnected"')
+        #             scoring_method = 'disconnected'
+        #             break
+        #     elif scoring_method == 'connected':
+        #         if len(connected_components) == 1:
+        #             break
+        #         elif connection_attempt >= n_attempts_before_giving_up:
+        #             print('Giving up')
+        #             keep_iterating = False
+        #             break
+        #     elif scoring_method == 'disconnected':
+        #         break
+        #
+        #     connection_attempt += 1
+        #
+        # if not keep_iterating:
+        #     break # Just go with the best iteration so far (rather than slogging through disconnected graphs)
 
         score = 0
 
-        # CONNECTED PAIRING BONUS ==============================================
-        # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
-        # and also encompasses strength-ness and locked-ness
-        # ranges from roughly (0 to 1) * 5, tho could be a lil over or under that range
-        average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
-        average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.25
-        score += average_shortest_path_score * 5
+        # LOCKED CONNECTIONS BONUS =============================================
+        # for selected_name in selected_names:
+        #     if selected_name in locked_names:
+        # for weighted_edge in weighted_edges:
 
-        # # Used for both strength and locked bonus:
-        # node_degrees = list(selected_g.degree())
-        # average_degree = sum([node_degree[1] for node_degree in node_degrees]) / len(node_degrees)
-        # # print('AVERAGE DEGREE', average_degree)
-        #
-        # # STRENGTH BONUS =======================================================
-        # strength_above_average = 0
-        # for node_degree in node_degrees:
-        #     if selected_ingredients['strong'][node_degree[0]] == 'Y':
-        #         strength_above_average += (node_degree[1] - average_degree)
-        #     elif selected_ingredients['strong'][node_degree[0]] == 'y':
-        #         strength_above_average += (node_degree[1] - average_degree) * .5
-        # strength_score = strength_above_average / 5 + .5
-        # print('STRENGTH ABOVE AVERAGE', strength_above_average)
-        #
-        # # LOCKED BONUS =========================================================
-        # locked_above_average = 0
-        # for node_degree in node_degrees:
-        #     if node_degree[0] in locked_names:
-        #         locked_above_average += node_degree[1] - average_degree
-        # print('LOCKED ABOVE AVERAGE', locked_above_average)
-        # print()
+        if scoring_method == 'connected':
+            # CONNECTED PAIRING BONUS ==========================================
+            # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
+            # and also encompasses strength-ness and locked-ness
+            # ranges from roughly (0 to 1) * 5, tho could be a lil over or under that range
+        average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='weight')
+        average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.25
+        # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
+        score += average_shortest_path_score * 5
+        print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
+        print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
+        print('N_CONNECTIONS and N_SELECTED', len(connections), len(selected_names))
+        # print('LOCKED DEMERIT SUM', locked_demerit_sum)
+        print()
+        else:
+            # DISCONNECTED PAIRING BONUS =======================================
+            # I want this to be VERY important. I feel this holds a lot of the strength of recipe,
+            # and also encompasses strength-ness and locked-ness
+            # not really sure how this sranges. hopefully (0 - 1) * 3? Hard to test.
+            largest_cc = max(connected_components, key=len)
+            largest_subgraph = selected_g.subgraph(largest_cc) # .copy()?
+            largest_subgraph_g = nx.Graph(largest_subgraph)
+
+            average_shortest_path_length = nx.average_shortest_path_length(largest_subgraph_g, weight='weight')
+            average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.25
+            # print('DISCONNECTED AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
+            score += average_shortest_path_score * 5
 
         # FLAVOR BALANCE BONUS =================================================
         # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -1037,31 +1071,30 @@ def generate_stir_fry_black_magic():
         score += food_group_score
 
         if top_score == None or score > top_score:
-            top_selected_ingredients = selected_ingredients
-            # top_average_shortest_path_score = average_shortest_path_score
+            print('SCORE GREATER')
+            top_average_shortest_path_score = average_shortest_path_score
             top_flavor_score = flavor_score
             top_food_group_score = food_group_score
             top_score = score
+            top_selected_ingredients = selected_ingredients
+        # else:
+        #     print('SCORE NOT GREATER', score, top_score)
 
-    if top_score:
-        data = {
-            'outcome': 'success',
-            'data': {
-                'present_names': present_names,
-                'locked_names': locked_names,
-                'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
-                # 'pairing_bonus': top_average_shortest_path_score,
-                'flavor_bonus': top_flavor_score,
-                'food_group_bonus': top_food_group_score,
-                'score': top_score,
-                'selected_names': top_selected_ingredients['name'].tolist(),
-            },
-        }
-    else:
-        data = {
-            'outcome': 'failure',
-            'message': "Darn! The generator isn't coming up with anything for these ingredients.",
-        }
+    # print('PAIRING BONUS', top_average_shortest_path_score)
+    # print('FLAVOR BALANCE BONUS', top_flavor_score)
+    # print('FOOD GROUP BONUS', top_food_group_score)
+    # print('SCORE', top_score)
+    data = {
+        'present_names': present_names,
+        'locked_names': locked_names,
+        'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
+        'pairing_bonus': top_average_shortest_path_score,
+        'flavor_bonus': top_flavor_score,
+        'food_group_bonus': top_food_group_score,
+        'score': top_score,
+        'selected_names': top_selected_ingredients['name'].tolist(),
+    }
+    # print('SELECTED NAMES', data['selected_names'])
     return(jsonify(data))
 
 if __name__ == "__main__":

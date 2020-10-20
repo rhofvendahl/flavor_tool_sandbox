@@ -639,41 +639,52 @@ var StirFryManager = function() {
                 // console.log('dealing with response')
                 return response.json();
             }).then(function(json) {
-                // console.log('dealing with json')
-                var presentNames = json['present_names'];
-                var selectedNames = json['selected_names'];
-                var lockedNames = json['locked_names'];
-                var generatedNames = json['generated_names'];
-
-                var presentNamesSet = new Set(presentNames);
-                var selectedNamesSet = new Set(selectedNames);
-                var lockedNamesSet = new Set(lockedNames);
-                var generatedNamesset = new Set(generatedNames);
-
-                self.ingredients.forEach(function(ingredient) {
-                    if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
-                        ingredient.add({
-                            selected: selectedNamesSet.has(ingredient.name),
-                            locked: lockedNamesSet.has(ingredient.name),
-                            connected: false
-                        });
-                        // self.getPresentSet().add(ingredient);
-                    } // no else clause, as I don't want to remove any ingredients added since the request was sent
-                    ingredient.selected = selectedNamesSet.has(ingredient.name);
-                    ingredient.locked = lockedNamesSet.has(ingredient.name);
-                    ingredient.render();
-                });
-
                 $('#generating').hide();
                 self.generating = false;
-                self.saveProjectToLocalStorage('');
 
-                setTimeout(function() {
-                    self.network.fit({
-                        nodes: selectedNames,
-                        animation: true
+                if (json['outcome'] == 'success') {
+                    // console.log('dealing with json')
+                    var presentNames = json['data']['present_names'];
+                    var selectedNames = json['data']['selected_names'];
+                    var lockedNames = json['data']['locked_names'];
+                    var generatedNames = json['data']['generated_names'];
+
+                    var presentNamesSet = new Set(presentNames);
+                    var selectedNamesSet = new Set(selectedNames);
+                    var lockedNamesSet = new Set(lockedNames);
+                    var generatedNamesset = new Set(generatedNames);
+
+                    self.ingredients.forEach(function(ingredient) {
+                        if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
+                            ingredient.add({
+                                selected: selectedNamesSet.has(ingredient.name),
+                                locked: lockedNamesSet.has(ingredient.name),
+                                connected: false
+                            });
+                            // self.getPresentSet().add(ingredient);
+                        } // no else clause, as I don't want to remove any ingredients added since the request was sent
+                        ingredient.selected = selectedNamesSet.has(ingredient.name);
+                        ingredient.locked = lockedNamesSet.has(ingredient.name);
+                        ingredient.render();
                     });
-                }, 2000);
+
+                    self.saveProjectToLocalStorage('');
+
+                    setTimeout(function() {
+                        self.network.fit({
+                            nodes: selectedNames,
+                            animation: true
+                        });
+                    }, 2000);
+                } else if (json['outcome'] == 'failure') {
+                    if (json['message']) {
+                        alert(json['message']);
+                    } else {
+                        console.log('ERROR: received "failure" outcome but no message')
+                    }
+                } else {
+                    console.log('ERROR: received outcome other than "success" or "failure"');
+                }
             }).catch(function(error) {
                 console.log(error);
                 alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
