@@ -54,13 +54,13 @@ def generate_salad():
     locked_dressing_salts = locked[locked['salad_dressing_salt'] == 'y']
     locked_dressing_peppers = locked[locked['salad_dressing_pepper'] == 'y']
 
-    the_rest = salad_data[~salad_data['name'].isin(locked_names)]
-    the_rest_greens = the_rest[the_rest['salad_green'] == 'y']
-    the_rest_extras = the_rest[the_rest['salad_extra'] == 'y']
-    the_rest_dressing_oils = the_rest[the_rest['salad_dressing_oil'] == 'y']
-    the_rest_dressing_vinegars = the_rest[the_rest['salad_dressing_vinegar'] == 'y']
-    the_rest_dressing_salts = the_rest[the_rest['salad_dressing_salt'] == 'y']
-    the_rest_dressing_peppers = the_rest[the_rest['salad_dressing_pepper'] == 'y']
+    unlocked = salad_data[~salad_data['name'].isin(locked_names)]
+    unlocked_greens = unlocked[unlocked['salad_green'] == 'y']
+    unlocked_extras = unlocked[unlocked['salad_extra'] == 'y']
+    unlocked_dressing_oils = unlocked[unlocked['salad_dressing_oil'] == 'y']
+    unlocked_dressing_vinegars = unlocked[unlocked['salad_dressing_vinegar'] == 'y']
+    unlocked_dressing_salts = unlocked[unlocked['salad_dressing_salt'] == 'y']
+    unlocked_dressing_peppers = unlocked[unlocked['salad_dressing_pepper'] == 'y']
 
     n_gen_greens_min = max(2-len(locked_greens), 0)
     n_gen_greens_max = max(3-len(locked_greens), 0)
@@ -85,19 +85,19 @@ def generate_salad():
         while True: # keep shuffling until you get a well connected graph
 
             # don't try to select fewer than 0, and don't try to select more than there are ingredients left
-            n_gen_greens = min(random.randrange(n_gen_greens_min, n_gen_greens_max+1), len(the_rest_greens))
-            n_gen_extras = min(random.randrange(n_gen_extras_min, n_gen_extras_max+1), len(the_rest_extras))
-            n_gen_dressing_oils = min(max(1-len(locked_dressing_oils), 0), len(the_rest_dressing_oils))
-            n_gen_dressing_vinegars = min(max(1-len(locked_dressing_vinegars), 0), len(the_rest_dressing_vinegars))
-            n_gen_dressing_salts = min(max(1-len(locked_dressing_salts), 0), len(the_rest_dressing_salts))
-            n_gen_dressing_peppers = min(max(1-len(locked_dressing_peppers), 0), len(the_rest_dressing_peppers))
+            n_gen_greens = min(random.randrange(n_gen_greens_min, n_gen_greens_max+1), len(unlocked_greens))
+            n_gen_extras = min(random.randrange(n_gen_extras_min, n_gen_extras_max+1), len(unlocked_extras))
+            n_gen_dressing_oils = min(max(1-len(locked_dressing_oils), 0), len(unlocked_dressing_oils))
+            n_gen_dressing_vinegars = min(max(1-len(locked_dressing_vinegars), 0), len(unlocked_dressing_vinegars))
+            n_gen_dressing_salts = min(max(1-len(locked_dressing_salts), 0), len(unlocked_dressing_salts))
+            n_gen_dressing_peppers = min(max(1-len(locked_dressing_peppers), 0), len(unlocked_dressing_peppers))
 
-            selected_greens = locked_greens.append(the_rest_greens.sample(n_gen_greens))
-            selected_extras = locked_extras.append(the_rest_extras.sample(n_gen_extras))
-            selected_dressing_oils = locked_dressing_oils.append(the_rest_dressing_oils.sample(n_gen_dressing_oils))
-            selected_dressing_vinegars = locked_dressing_vinegars.append(the_rest_dressing_vinegars.sample(n_gen_dressing_vinegars))
-            selected_dressing_salts = locked_dressing_salts.append(the_rest_dressing_salts.sample(n_gen_dressing_salts))
-            selected_dressing_peppers = locked_dressing_peppers.append(the_rest_dressing_peppers.sample(n_gen_dressing_peppers))
+            selected_greens = locked_greens.append(unlocked_greens.sample(n_gen_greens))
+            selected_extras = locked_extras.append(unlocked_extras.sample(n_gen_extras))
+            selected_dressing_oils = locked_dressing_oils.append(unlocked_dressing_oils.sample(n_gen_dressing_oils))
+            selected_dressing_vinegars = locked_dressing_vinegars.append(unlocked_dressing_vinegars.sample(n_gen_dressing_vinegars))
+            selected_dressing_salts = locked_dressing_salts.append(unlocked_dressing_salts.sample(n_gen_dressing_salts))
+            selected_dressing_peppers = locked_dressing_peppers.append(unlocked_dressing_peppers.sample(n_gen_dressing_peppers))
             selected_ingredients = selected_greens.append(selected_extras).append(selected_dressing_oils).append(selected_dressing_vinegars).append(selected_dressing_salts).append(selected_dressing_peppers)
             selected_names = selected_ingredients['name'].tolist()
 
@@ -400,6 +400,14 @@ def generate_stir_fry():
         return(jsonify(data))
 
     stir_fry_data = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
+    present_fat_oils = stir_fry_data[stir_fry_data['stir_fry_fat_oil'] == 'y']
+    present_salts = stir_fry_data[stir_fry_data['stir_fry_salt'] == 'y']
+    present_other_flavorings = stir_fry_data[(stir_fry_data['stir_fry_flavoring'] == 'y') & (stir_fry_data['stir_fry_salt'] != 'y')]
+    present_foodstuffs = stir_fry_data[(stir_fry_data['stir_fry_fat_oil'] != 'y') & (stir_fry_data['stir_fry_salt'] != 'y') & (stir_fry_data['stir_fry_flavoring'] != 'y')] # why am I selecting not salt? already selecting not flavoring. don't wanna mess tho..
+    present_fat_oils_set = set(present_fat_oils['name'])
+    present_salts_set = set(present_salts['name'])
+    present_other_flavorings_set = set(present_other_flavorings['name'])
+    present_foodstuffs_set = set(present_foodstuffs['name'])
 
     locked = stir_fry_data[stir_fry_data['name'].isin(locked_names)]
     locked_fat_oils = locked[locked['stir_fry_fat_oil'] == 'y']
@@ -407,34 +415,34 @@ def generate_stir_fry():
     locked_other_flavorings = locked[(locked['stir_fry_flavoring'] == 'y') & (locked['stir_fry_salt'] != 'y')]
     locked_foodstuffs = locked[(locked['stir_fry_fat_oil'] != 'y') & (locked['stir_fry_salt'] != 'y') & (locked['stir_fry_flavoring'] != 'y')]
 
-    the_rest = stir_fry_data[~stir_fry_data['name'].isin(locked['name'])]
-    the_rest_fat_oils = the_rest[the_rest['stir_fry_fat_oil'] == 'y']
-    the_rest_salts = the_rest[the_rest['stir_fry_salt'] == 'y']
-    the_rest_other_flavorings = the_rest[(the_rest['stir_fry_flavoring'] == 'y') & (the_rest['stir_fry_salt'] != 'y')]
-    the_rest_foodstuffs = the_rest[(the_rest['stir_fry_fat_oil'] != 'y') & (the_rest['stir_fry_salt'] != 'y') & (the_rest['stir_fry_flavoring'] != 'y')]
+    unlocked = stir_fry_data[~stir_fry_data['name'].isin(locked['name'])]
+    unlocked_fat_oils = unlocked[unlocked['stir_fry_fat_oil'] == 'y']
+    unlocked_salts = unlocked[unlocked['stir_fry_salt'] == 'y']
+    unlocked_other_flavorings = unlocked[(unlocked['stir_fry_flavoring'] == 'y') & (unlocked['stir_fry_salt'] != 'y')]
+    unlocked_foodstuffs = unlocked[(unlocked['stir_fry_fat_oil'] != 'y') & (unlocked['stir_fry_salt'] != 'y') & (unlocked['stir_fry_flavoring'] != 'y')]
 
     n_additional_salts_needed = max(n_salts - len(locked_salts), 0)
-    n_additional_salts_actual = min(n_additional_salts_needed, len(the_rest_salts))
+    n_additional_salts_actual = min(n_additional_salts_needed, len(unlocked_salts))
     n_total_salts_actual = n_additional_salts_actual + len(locked_salts)
 
     n_additional_fat_oils_needed = max(n_fat_oils - len(locked_fat_oils), 0)
-    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(the_rest_fat_oils))
+    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(unlocked_fat_oils))
     n_total_fat_oils_actual = n_additional_fat_oils_actual + len(locked_fat_oils)
 
     n_additional_other_flavorings_needed_min = max(n_other_flavorings_min - len(locked_other_flavorings), 0)
-    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(the_rest_other_flavorings))
+    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(unlocked_other_flavorings))
     n_total_other_flavorings_actual_min = n_additional_other_flavorings_actual_min + len(locked_other_flavorings)
 
     n_additional_other_flavorings_needed_max = max(n_other_flavorings_max - len(locked_other_flavorings), 0) # yikes, I had this as min..
-    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(the_rest_other_flavorings))
+    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(unlocked_other_flavorings))
     n_total_other_flavorings_actual_max = n_additional_other_flavorings_actual_max + len(locked_other_flavorings)
 
     n_additional_foodstuffs_needed_min = max(n_foodstuffs_min - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(the_rest_foodstuffs))
+    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_min = n_additional_foodstuffs_actual_min + len(locked_foodstuffs)
 
     n_additional_foodstuffs_needed_max = max(n_foodstuffs_max - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(the_rest_foodstuffs))
+    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
 
     n_iterations = 300
@@ -445,13 +453,13 @@ def generate_stir_fry():
 
         selected_ingredients = locked
         if n_additional_salts_actual > 0:
-            selected_ingredients = selected_ingredients.append(the_rest_salts.sample(n_additional_salts_actual))
+            selected_ingredients = selected_ingredients.append(unlocked_salts.sample(n_additional_salts_actual))
         if n_additional_fat_oils_actual > 0:
-            selected_ingredients = selected_ingredients.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
+            selected_ingredients = selected_ingredients.append(unlocked_fat_oils.sample(n_additional_fat_oils_actual))
         if n_additional_other_flavorings_actual > 0:
-            selected_ingredients = selected_ingredients.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
+            selected_ingredients = selected_ingredients.append(unlocked_other_flavorings.sample(n_additional_other_flavorings_actual))
         if n_additional_foodstuffs_actual > 0:
-            selected_ingredients = selected_ingredients.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
+            selected_ingredients = selected_ingredients.append(unlocked_foodstuffs.sample(n_additional_foodstuffs_actual))
 
         selected_names = selected_ingredients['name'].values.tolist()
 
@@ -598,14 +606,14 @@ def generate_stir_fry():
     return(jsonify(data))
 
 # BLACK MAGIC SETUP ============================================================
-# Darn, this pollutes namespace for salad... ugh. Is it fast enough to include inside? Should I prepend "stir_fry_"?
-salt_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_salt'] == 'y']['name'])
-fat_oil_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_fat_oil'] == 'y']['name'])
-other_flavoring_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_flavoring'] == 'y']['name']) - salt_set
-foodstuff_set = set(stir_fry_flavor_data['name']) - salt_set - fat_oil_set - other_flavoring_set
-mushroom_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_mushroom'] == 'y']['name'])
-bean_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_protein_bean'] == 'y'])
-grain_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_grain'] == 'y'])
+# # Darn, this pollutes namespace for salad... ugh. Is it fast enough to include inside? Should I prepend "stir_fry_"?
+# salt_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_salt'] == 'y']['name'])
+# fat_oil_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_fat_oil'] == 'y']['name'])
+# other_flavoring_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_flavoring'] == 'y']['name']) - salt_set
+# foodstuff_set = set(stir_fry_flavor_data['name']) - salt_set - fat_oil_set - other_flavoring_set
+# mushroom_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_mushroom'] == 'y']['name'])
+# bean_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_protein_bean'] == 'y'])
+# grain_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_grain'] == 'y'])
 
 reasonable_clique_upper = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_reasonable_clique_upper.pickle'))
 
@@ -668,6 +676,14 @@ def generate_stir_fry_black_magic():
     present_set = set(present_names)
     present_strong_set = set(present[present['strong'].isin(['Y', 'y'])]['name'])
     not_present_set = set(stir_fry_flavor_data['name']) - present_set
+    present_fat_oils = present[present['stir_fry_fat_oil'] == 'y']
+    present_salts = present[present['stir_fry_salt'] == 'y']
+    present_other_flavorings = present[(present['stir_fry_flavoring'] == 'y') & (present['stir_fry_salt'] != 'y')]
+    present_foodstuffs = present[(present['stir_fry_fat_oil'] != 'y') & (present['stir_fry_salt'] != 'y') & (present['stir_fry_flavoring'] != 'y')] # why am I selecting not salt? already selecting not flavoring. don't wanna mess tho..
+    present_fat_oils_set = set(present_fat_oils['name'])
+    present_salts_set = set(present_salts['name'])
+    present_other_flavorings_set = set(present_other_flavorings['name'])
+    present_foodstuffs_set = set(present_foodstuffs['name'])
 
     locked = present[present['name'].isin(locked_names)]
     locked_set = set(locked_names)
@@ -680,39 +696,39 @@ def generate_stir_fry_black_magic():
     locked_other_flavorings_set = set(locked_other_flavorings['name'])
     locked_foodstuffs_set = set(locked_foodstuffs['name'])
 
-    the_rest = present[~present['name'].isin(locked['name'])]
-    the_rest_set = present_set - locked_set
-    the_rest_fat_oils = the_rest[the_rest['stir_fry_fat_oil'] == 'y']
-    the_rest_salts = the_rest[the_rest['stir_fry_salt'] == 'y']
-    the_rest_other_flavorings = the_rest[(the_rest['stir_fry_flavoring'] == 'y') & (the_rest['stir_fry_salt'] != 'y')]
-    the_rest_foodstuffs = the_rest[(the_rest['stir_fry_fat_oil'] != 'y') & (the_rest['stir_fry_salt'] != 'y') & (the_rest['stir_fry_flavoring'] != 'y')]
-    the_rest_fat_oils_set = set(the_rest_fat_oils['name'])
-    the_rest_salts_set = set(the_rest_salts['name'])
-    the_rest_other_flavorings_set = set(the_rest_other_flavorings['name'])
-    the_rest_foodstuffs_set = set(the_rest_foodstuffs['name'])
+    unlocked = present[~present['name'].isin(locked['name'])]
+    unlocked_set = present_set - locked_set
+    unlocked_fat_oils = unlocked[unlocked['stir_fry_fat_oil'] == 'y']
+    unlocked_salts = unlocked[unlocked['stir_fry_salt'] == 'y']
+    unlocked_other_flavorings = unlocked[(unlocked['stir_fry_flavoring'] == 'y') & (unlocked['stir_fry_salt'] != 'y')]
+    unlocked_foodstuffs = unlocked[(unlocked['stir_fry_fat_oil'] != 'y') & (unlocked['stir_fry_salt'] != 'y') & (unlocked['stir_fry_flavoring'] != 'y')]
+    unlocked_fat_oils_set = set(unlocked_fat_oils['name'])
+    unlocked_salts_set = set(unlocked_salts['name'])
+    unlocked_other_flavorings_set = set(unlocked_other_flavorings['name'])
+    unlocked_foodstuffs_set = set(unlocked_foodstuffs['name'])
 
     n_additional_salts_needed = max(n_salts - len(locked_salts), 0)
-    n_additional_salts_actual = min(n_additional_salts_needed, len(the_rest_salts))
+    n_additional_salts_actual = min(n_additional_salts_needed, len(unlocked_salts))
     n_total_salts_actual = n_additional_salts_actual + len(locked_salts)
 
     n_additional_fat_oils_needed = max(n_fat_oils - len(locked_fat_oils), 0)
-    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(the_rest_fat_oils))
+    n_additional_fat_oils_actual = min(n_additional_fat_oils_needed, len(unlocked_fat_oils))
     n_total_fat_oils_actual = n_additional_fat_oils_actual + len(locked_fat_oils)
 
     n_additional_other_flavorings_needed_min = max(n_other_flavorings_min - len(locked_other_flavorings), 0)
-    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(the_rest_other_flavorings))
+    n_additional_other_flavorings_actual_min = min(n_additional_other_flavorings_needed_min, len(unlocked_other_flavorings))
     n_total_other_flavorings_actual_min = n_additional_other_flavorings_actual_min + len(locked_other_flavorings)
 
     n_additional_other_flavorings_needed_max = max(n_other_flavorings_max - len(locked_other_flavorings), 0) # yikes, I had this as min..
-    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(the_rest_other_flavorings))
+    n_additional_other_flavorings_actual_max = min(n_additional_other_flavorings_needed_max, len(unlocked_other_flavorings))
     n_total_other_flavorings_actual_max = n_additional_other_flavorings_actual_max + len(locked_other_flavorings)
 
     n_additional_foodstuffs_needed_min = max(n_foodstuffs_min - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(the_rest_foodstuffs))
+    n_additional_foodstuffs_actual_min = min(n_additional_foodstuffs_needed_min, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_min = n_additional_foodstuffs_actual_min + len(locked_foodstuffs)
 
     n_additional_foodstuffs_needed_max = max(n_foodstuffs_max - len(locked_foodstuffs), 0)
-    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(the_rest_foodstuffs))
+    n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
 
     ok_cliques = reasonable_clique_upper[:1000].copy()
@@ -818,10 +834,10 @@ def generate_stir_fry_black_magic():
                 print('MAJOR PROBLEM! Likely cause: clique_data contains not-present ingredients.')
                 clique_ingredients = stir_fry_flavor_data.loc[clique['ok_list']]
 
-            salts_so_far_set = clique['ok_set'].intersection(salt_set).union(locked_salts_set)
-            fat_oils_so_far_set = clique['ok_set'].intersection(fat_oil_set).union(locked_fat_oils_set)
-            other_flavorings_so_far_set = clique['ok_set'].intersection(other_flavoring_set).union(locked_other_flavorings_set)
-            foodstuffs_so_far_set = clique['ok_set'].intersection(foodstuff_set).union(locked_foodstuffs_set)
+            salts_so_far_set = clique['ok_set'].intersection(present_salts_set).union(locked_salts_set)
+            fat_oils_so_far_set = clique['ok_set'].intersection(present_fat_oils_set).union(locked_fat_oils_set)
+            other_flavorings_so_far_set = clique['ok_set'].intersection(present_other_flavorings_set).union(locked_other_flavorings_set)
+            foodstuffs_so_far_set = clique['ok_set'].intersection(present_foodstuffs_set).union(locked_foodstuffs_set)
             ingredients_so_far_set = clique['ok_set'].union(locked_set)
 
             n_additional_non_clique_salts = n_total_salts_actual - len(salts_so_far_set) # pretty sure there shouldn't be more salts so far than salts actual
@@ -831,22 +847,22 @@ def generate_stir_fry_black_magic():
 
             selected_ingredients = present[present['name'].isin(ingredients_so_far_set)]
 
-            additional_salts_pool = the_rest_salts[~the_rest_salts['name'].isin(clique_ingredients['name'])]
+            additional_salts_pool = unlocked_salts[~unlocked_salts['name'].isin(clique_ingredients['name'])]
             if n_additional_non_clique_salts > 0:
                 additional_salts = additional_salts_pool.sample(n_additional_non_clique_salts, weights='weak_score')
                 selected_ingredients = selected_ingredients.append(additional_salts)
 
-            additional_fat_oils_pool = the_rest_fat_oils[~the_rest_fat_oils['name'].isin(clique_ingredients['name'])]
+            additional_fat_oils_pool = unlocked_fat_oils[~unlocked_fat_oils['name'].isin(clique_ingredients['name'])]
             if n_additional_non_clique_fat_oils > 0:
                 additional_fat_oils = additional_fat_oils_pool.sample(n_additional_non_clique_fat_oils, weights='weak_score')
                 selected_ingredients = selected_ingredients.append(additional_fat_oils)
 
-            additional_other_flavorings_pool = the_rest_other_flavorings[~the_rest_other_flavorings['name'].isin(clique_ingredients['name'])]
+            additional_other_flavorings_pool = unlocked_other_flavorings[~unlocked_other_flavorings['name'].isin(clique_ingredients['name'])]
             if n_additional_non_clique_other_flavorings > 0:
                 additional_other_flavorings = additional_other_flavorings_pool.sample(n_additional_non_clique_other_flavorings, weights='weak_score')
                 selected_ingredients = selected_ingredients.append(additional_other_flavorings)
 
-            additional_foodstuffs_pool = the_rest_foodstuffs[~the_rest_foodstuffs['name'].isin(clique_ingredients['name'])]
+            additional_foodstuffs_pool = unlocked_foodstuffs[~unlocked_foodstuffs['name'].isin(clique_ingredients['name'])]
             if n_additional_non_clique_foodstuffs > 0:
                 additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='weak_score')
                 selected_ingredients = selected_ingredients.append(additional_foodstuffs)
@@ -854,13 +870,13 @@ def generate_stir_fry_black_magic():
             print('REGULAR IT IS.')
             selected_ingredients = locked
             if n_additional_salts_actual > 0:
-                selected_ingredients = selected_ingredients.append(the_rest_salts.sample(n_additional_salts_actual))
+                selected_ingredients = selected_ingredients.append(unlocked_salts.sample(n_additional_salts_actual))
             if n_additional_fat_oils_actual > 0:
-                selected_ingredients = selected_ingredients.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
+                selected_ingredients = selected_ingredients.append(unlocked_fat_oils.sample(n_additional_fat_oils_actual))
             if n_additional_other_flavorings_actual > 0:
-                selected_ingredients = selected_ingredients.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
+                selected_ingredients = selected_ingredients.append(unlocked_other_flavorings.sample(n_additional_other_flavorings_actual))
             if n_additional_foodstuffs_actual > 0:
-                selected_ingredients = selected_ingredients.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
+                selected_ingredients = selected_ingredients.append(unlocked_foodstuffs.sample(n_additional_foodstuffs_actual))
 
         selected_names = selected_ingredients['name'].values.tolist()
 
