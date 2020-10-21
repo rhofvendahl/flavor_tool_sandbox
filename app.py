@@ -451,17 +451,57 @@ def generate_stir_fry():
         n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
         n_additional_foodstuffs_actual = random.randrange(n_additional_foodstuffs_actual_min, n_additional_foodstuffs_actual_max+1)
 
-        selected_ingredients = locked
-        if n_additional_salts_actual > 0:
-            selected_ingredients = selected_ingredients.append(unlocked_salts.sample(n_additional_salts_actual))
-        if n_additional_fat_oils_actual > 0:
-            selected_ingredients = selected_ingredients.append(unlocked_fat_oils.sample(n_additional_fat_oils_actual))
-        if n_additional_other_flavorings_actual > 0:
-            selected_ingredients = selected_ingredients.append(unlocked_other_flavorings.sample(n_additional_other_flavorings_actual))
-        if n_additional_foodstuffs_actual > 0:
-            selected_ingredients = selected_ingredients.append(unlocked_foodstuffs.sample(n_additional_foodstuffs_actual))
+        if len(locked) > 0:
+            maybe_neighbors_so_far_list = []
+            for ingredient_name in locked['name'].tolist():
+                maybe_neighbors_so_far_list += locked['upper_names'][ingredient_name]
 
-        selected_names = selected_ingredients['name'].values.tolist()
+            valid_neighbor_counts = dict()
+            for neighbor in maybe_neighbors_so_far_list:
+                if not neighbor in locked:
+                    valid_neighbor_counts[neighbor] = valid_neighbor_counts.get(neighbor, 0) + 1
+            selected_ingredients = locked
+
+        elif len(present_other_flavorings) > 1 and len(present_foodstuffs) > 1:
+            seed = present_other_flavorings.append(present_foodstuffs).sample(1)
+            maybe_neighbors_so_far_list = seed['upper_names'].iloc[0]
+            valid_neighbor_counts = {neighbor: 1 for neighbor in seed['upper_names'].iloc[0]}
+            selected_ingredients = locked.append(seed)
+            if seed['stir_fry_flavoring'].iloc[0] == 'y':
+                n_additional_other_flavorings_actual -= 1
+            else:
+                n_additional_foodstuffs_actual -= 1
+        elif len(present_foodstuffs) > 1: # paranoid
+            print('No other flavorings? weird.')
+            seed = present_foodstuffs.sample(1)
+            maybe_neighbors_so_far_list = seed['upper_names'].iloc[0]
+            valid_neighbor_counts = {neighbor: 1 for neighbor in seed['upper_names'].iloc[0]}
+            selected_ingredients = locked.append(seed)
+            n_additional_foodstuffs_actual -= 1
+        else: # very paranoid
+            print('Yikes! No flavorings OR foodstuffs.')
+            continue
+
+        selected_names_so_far = selected_ingredients['name'].tolist()
+
+        if n_additional_salts_actual > 0:
+            additional_salts_pool = unlocked_salts[~unlocked_salts['name'].isin(selected_names_so_far)]
+            additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_salts_pool['name']]
+            selected_ingredients = selected_ingredients.append(additional_salts_pool.sample(n_additional_salts_actual, weights='neighbor_counts_xtreme'))
+        if n_additional_fat_oils_actual > 0:
+            additional_fat_oils_pool = unlocked_fat_oils[~unlocked_fat_oils['name'].isin(selected_names_so_far)]
+            additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_fat_oils_pool['name']]
+            selected_ingredients = selected_ingredients.append(additional_fat_oils_pool.sample(n_additional_fat_oils_actual, weights='neighbor_counts_xtreme'))
+        if n_additional_other_flavorings_actual > 0:
+            additional_other_flavorings_pool = unlocked_other_flavorings[~unlocked_other_flavorings['name'].isin(selected_names_so_far)]
+            additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_other_flavorings_pool['name']]
+            selected_ingredients = selected_ingredients.append(additional_other_flavorings_pool.sample(n_additional_other_flavorings_actual, weights='neighbor_counts_xtreme'))
+        if n_additional_foodstuffs_actual > 0:
+            additional_foodstuffs_pool = unlocked_foodstuffs[~unlocked_foodstuffs['name'].isin(selected_names_so_far)]
+            additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_foodstuffs_pool['name']]
+            selected_ingredients = selected_ingredients.append(additional_foodstuffs_pool.sample(n_additional_foodstuffs_actual, weights='neighbor_counts_xtreme'))
+
+        selected_names = selected_ingredients['name'].tolist()
 
         selected_g = nx.Graph()
         selected_g.add_nodes_from(selected_names)
@@ -845,27 +885,45 @@ def generate_stir_fry_black_magic():
             n_additional_non_clique_other_flavorings = n_total_other_flavorings_actual - len(other_flavorings_so_far_set)
             n_additional_non_clique_foodstuffs = n_total_foodstuffs_actual - len(foodstuffs_so_far_set)
 
+            # I want some way to note how many so_far ingredients neighbor is next to
+            # lessee. if a neighbor is next to a LOT of so far ingredients, it should appear a bunch, cause I'm iterating through so far set
+            maybe_neighbors_so_far_list = []
+            for ingredient in ingredients_so_far_set:
+                maybe_neighbors_so_far_list += stir_fry_flavor_data['upper_names'][ingredient]
+
+            valid_neighbor_counts = dict()
+            for neighbor in maybe_neighbors_so_far_list:
+                if not neighbor in ingredients_so_far_set:
+                    valid_neighbor_counts[neighbor] = valid_neighbor_counts.get(neighbor, 0) + 1
+
             selected_ingredients = present[present['name'].isin(ingredients_so_far_set)]
 
-            additional_salts_pool = unlocked_salts[~unlocked_salts['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_salts > 0:
-                additional_salts = additional_salts_pool.sample(n_additional_non_clique_salts, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_salts)
+        # the idea is that with a low weight, non-neighbors will only be selected after neighbors
+        # counts are squared to exaggerate the preference for an ingredient being neighbor to many selected ingredients
+        if n_additional_non_clique_salts > 0:
+            additional_salts_pool = present_salts[~present_salts['name'].isin(salts_so_far_set)]
+            additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_salts_pool['name']]
+            additional_salts = additional_salts_pool.sample(n_additional_non_clique_salts, weights='neighbor_counts_xtreme')
+            selected_ingredients = selected_ingredients.append(additional_salts)
 
-            additional_fat_oils_pool = unlocked_fat_oils[~unlocked_fat_oils['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_fat_oils > 0:
-                additional_fat_oils = additional_fat_oils_pool.sample(n_additional_non_clique_fat_oils, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_fat_oils)
+        if n_additional_non_clique_fat_oils > 0:
+            additional_fat_oils_pool = present_fat_oils[~present_fat_oils['name'].isin(fat_oils_so_far_set)]
+            additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_fat_oils_pool['name']]
+            additional_fat_oils = additional_fat_oils_pool.sample(n_additional_non_clique_fat_oils, weights='neighbor_counts_xtreme')
+            selected_ingredients = selected_ingredients.append(additional_fat_oils)
 
-            additional_other_flavorings_pool = unlocked_other_flavorings[~unlocked_other_flavorings['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_other_flavorings > 0:
-                additional_other_flavorings = additional_other_flavorings_pool.sample(n_additional_non_clique_other_flavorings, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_other_flavorings)
+        if n_additional_non_clique_other_flavorings > 0:
+            additional_other_flavorings_pool = present_other_flavorings[~present_other_flavorings['name'].isin(other_flavorings_so_far_set)]
+            additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_other_flavorings_pool['name']]
+            additional_other_flavorings = additional_other_flavorings_pool.sample(n_additional_non_clique_other_flavorings, weights='neighbor_counts_xtreme')
+            selected_ingredients = selected_ingredients.append(additional_other_flavorings)
 
-            additional_foodstuffs_pool = unlocked_foodstuffs[~unlocked_foodstuffs['name'].isin(clique_ingredients['name'])]
-            if n_additional_non_clique_foodstuffs > 0:
-                additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='weak_score')
-                selected_ingredients = selected_ingredients.append(additional_foodstuffs)
+        if n_additional_non_clique_foodstuffs > 0:
+            additional_foodstuffs_pool = present_foodstuffs[~present_foodstuffs['name'].isin(foodstuffs_so_far_set)]
+            additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .001)**2 for name in additional_foodstuffs_pool['name']]
+            additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='neighbor_counts_xtreme')
+            selected_ingredients = selected_ingredients.append(additional_foodstuffs)
+
         else: # REGULAR
             print('REGULAR IT IS.')
             selected_ingredients = locked
@@ -878,7 +936,7 @@ def generate_stir_fry_black_magic():
             if n_additional_foodstuffs_actual > 0:
                 selected_ingredients = selected_ingredients.append(unlocked_foodstuffs.sample(n_additional_foodstuffs_actual))
 
-        selected_names = selected_ingredients['name'].values.tolist()
+        selected_names = selected_ingredients['name'].tolist()
 
         selected_g = nx.Graph()
         selected_g.add_nodes_from(selected_names)

@@ -675,7 +675,7 @@ var StirFryManager = function() {
                             nodes: selectedNames,
                             animation: true
                         });
-                    }, 2000);
+                    }, 2200);
                 } else if (json['outcome'] == 'failure') {
                     if (json['message']) {
                         alert(json['message']);
