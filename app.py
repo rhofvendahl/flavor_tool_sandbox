@@ -437,19 +437,15 @@ def generate_stir_fry():
         n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
         n_additional_foodstuffs_actual = random.randrange(n_additional_foodstuffs_actual_min, n_additional_foodstuffs_actual_max+1)
 
-        selected_ingredients = pd.DataFrame(columns=stir_fry_flavor_data.columns)
+        selected_ingredients = locked
         if n_additional_salts_actual > 0:
-            selected_salts = locked_salts.append(the_rest_salts.sample(n_additional_salts_actual))
-            selected_ingredients = selected_ingredients.append(selected_salts)
+            selected_ingredients = selected_ingredients.append(the_rest_salts.sample(n_additional_salts_actual))
         if n_additional_fat_oils_actual > 0:
-            selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
-            selected_ingredients = selected_ingredients.append(selected_fat_oils)
+            selected_ingredients = selected_ingredients.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
         if n_additional_other_flavorings_actual > 0:
-            selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
-            selected_ingredients = selected_ingredients.append(selected_other_flavorings)
+            selected_ingredients = selected_ingredients.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
         if n_additional_foodstuffs_actual > 0:
-            selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
-            selected_ingredients = selected_ingredients.append(selected_foodstuffs)
+            selected_ingredients = selected_ingredients.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
 
         selected_names = selected_ingredients['name'].values.tolist()
 
@@ -574,7 +570,7 @@ def generate_stir_fry():
         # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
         # print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
-        average_shortest_path_score = 1 / average_shortest_path_length * 2 - 1.3
+        average_shortest_path_score = 1 / average_shortest_path_length * 2 - 3
         # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
         score += average_shortest_path_score * 5
 
@@ -872,6 +868,7 @@ def generate_stir_fry_black_magic():
         final_cliques = ok_cliques[(ok_cliques['ok_n_other_flavorings'] <= n_additional_other_flavorings_actual) & (ok_cliques['ok_n_foodstuffs'] <= n_additional_foodstuffs_actual)]
 
         if len(final_cliques) > 0: # BLACK MAGIC
+            print('LET\'S DO MAGIC!')
             clique = final_cliques.sample(1, weights='ok_score_xtreme').iloc[0] # using xtreme to skew sample toward top
 
             try:
@@ -913,19 +910,16 @@ def generate_stir_fry_black_magic():
                 additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='weak_score')
                 selected_ingredients = selected_ingredients.append(additional_foodstuffs)
         else: # REGULAR
-            selected_ingredients = pd.DataFrame(columns=stir_fry_flavor_data.columns)
+            print('REGULAR IT IS.')
+            selected_ingredients = locked
             if n_additional_salts_actual > 0:
-                selected_salts = locked_salts.append(the_rest_salts.sample(n_additional_salts_actual))
-                selected_ingredients = selected_ingredients.append(selected_salts)
+                selected_ingredients = selected_ingredients.append(the_rest_salts.sample(n_additional_salts_actual))
             if n_additional_fat_oils_actual > 0:
-                selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
-                selected_ingredients = selected_ingredients.append(selected_fat_oils)
+                selected_ingredients = selected_ingredients.append(the_rest_fat_oils.sample(n_additional_fat_oils_actual))
             if n_additional_other_flavorings_actual > 0:
-                selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
-                selected_ingredients = selected_ingredients.append(selected_other_flavorings)
+                selected_ingredients = selected_ingredients.append(the_rest_other_flavorings.sample(n_additional_other_flavorings_actual))
             if n_additional_foodstuffs_actual > 0:
-                selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
-                selected_ingredients = selected_ingredients.append(selected_foodstuffs)
+                selected_ingredients = selected_ingredients.append(the_rest_foodstuffs.sample(n_additional_foodstuffs_actual))
 
         selected_names = selected_ingredients['name'].values.tolist()
 
@@ -938,21 +932,22 @@ def generate_stir_fry_black_magic():
 
                 # Weights super guess-y
                 if connection[0] == 'c':
-                    selected_g.add_edge(name_1, name_2, length=1, weight=.4) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=1, weight=.3) # prev .8
                 elif connection[0] == 'd':
                     # pairs_with_demerit = .5 # prev .6666
-                    selected_g.add_edge(name_1, name_2, length=.8, weight=.6) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.7, weight=.6) # prev .8
                 elif connection[0] == 'C':
                     # pairs_with_demerit = .4 # prev .5333
-                    selected_g.add_edge(name_1, name_2, length=.6, weight=.8) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.6, weight=.7) # prev .8
                 elif connection[0] == 'D':
                     # pairs_with_demerit = .3 # prev. .4
-                    selected_g.add_edge(name_1, name_2, length=.4, weight=1) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.3, weight=1) # prev .8
 
         # Try again, friend
         if not nx.is_connected(selected_g):
             print(str(iteration)+': NOT CONNECTED; SKIPPING TO NEXT ITERATION')
             continue
+
 
         score = 0
 
@@ -961,31 +956,35 @@ def generate_stir_fry_black_magic():
         # and also encompasses strength-ness and locked-ness
         # ranges from roughly (0 to 1) * 5, tho could be a lil over or under that range
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
-        average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.25
+        # average_shortest_path_score = 1 / average_shortest_path_length * 1.2 - 1.1 # normalizes full house
+        average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.3 # normalizes small pool (& doesn't do bad w full house)
         score += average_shortest_path_score * 5
+        # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
 
-        # # Used for both strength and locked bonus:
-        # node_degrees = list(selected_g.degree())
-        # average_degree = sum([node_degree[1] for node_degree in node_degrees]) / len(node_degrees)
-        # # print('AVERAGE DEGREE', average_degree)
-        #
-        # # STRENGTH BONUS =======================================================
-        # strength_above_average = 0
-        # for node_degree in node_degrees:
-        #     if selected_ingredients['strong'][node_degree[0]] == 'Y':
-        #         strength_above_average += (node_degree[1] - average_degree)
-        #     elif selected_ingredients['strong'][node_degree[0]] == 'y':
-        #         strength_above_average += (node_degree[1] - average_degree) * .5
-        # strength_score = strength_above_average / 5 + .5
-        # print('STRENGTH ABOVE AVERAGE', strength_above_average)
-        #
-        # # LOCKED BONUS =========================================================
-        # locked_above_average = 0
-        # for node_degree in node_degrees:
-        #     if node_degree[0] in locked_names:
-        #         locked_above_average += node_degree[1] - average_degree
-        # print('LOCKED ABOVE AVERAGE', locked_above_average)
-        # print()
+        # Used for both strength and locked bonus:
+        node_degrees = list(selected_g.degree(weight='weight'))
+        average_degree = sum([node_degree[1] for node_degree in node_degrees]) / len(node_degrees)
+
+        # STRENGTH BONUS =======================================================
+        strength_above_average = 0
+        for node_degree in node_degrees:
+            if selected_ingredients['strong'][node_degree[0]] == 'Y':
+                strength_above_average += (node_degree[1] - average_degree)
+            elif selected_ingredients['strong'][node_degree[0]] == 'y':
+                strength_above_average += (node_degree[1] - average_degree) * .5
+        strength_score = strength_above_average * .2 + .5 # reasonable for small and full pools
+        # print('STRENGTH SCORE', strength_score)
+        score += strength_score
+
+        # LOCKED BONUS =========================================================
+        locked_above_average = 0
+        for node_degree in node_degrees:
+            if node_degree[0] in locked_names:
+                # print(node_degree[1])
+                locked_above_average += node_degree[1] - average_degree
+        locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
+        # print('LOCKED SCORE', locked_score)
+        score += locked_score * 2
 
         # FLAVOR BALANCE BONUS =================================================
         # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -1016,10 +1015,10 @@ def generate_stir_fry_black_magic():
         flavor_score += savory_score*3 # LOVE me some savory
         flavor_score += bitter_score # idk
         flavor_score += spicy_score*2 # can be nice
-        flavor_score = flavor_score * .15 - .75
+        flavor_score = flavor_score * .2 - 1.3 # yields reasonable scores w full or small pool
 
-        # print('FLAVOR BALANCE SCORE', flavor_score)
         score += flavor_score
+        # print('FLAVOR SCORE', flavor_score)
 
         # FOOD GROUPS BONUS ==========================================================================================
         if 'y' in selected_ingredients['stir_fry_protein'].values:
@@ -1033,9 +1032,10 @@ def generate_stir_fry_black_magic():
             fruit_score = 0
 
         food_group_score = protein_score + fruit_score
-    #     print('PROTEIN FRUIT', protein_score, fruit_score)
         score += food_group_score
+        # print('FOOD GROUP SCORE', food_group_score)
 
+        # print()
         if top_score == None or score > top_score:
             top_selected_ingredients = selected_ingredients
             # top_average_shortest_path_score = average_shortest_path_score
