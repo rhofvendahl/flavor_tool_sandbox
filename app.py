@@ -164,15 +164,16 @@ def generate_salad():
                         # else:
                         #     print('OH NO! BAD STRENGTH VALUE.')
 
-                        # idea is that if 1+ names are locked, their connections will weigh score down less
-                        if col_name in locked_names and row_name in locked_names:
-                            locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
-                        elif col_name in locked_names or row_name in locked_names:
-                            locked_demerit = .2
-                        else:
-                            locked_demerit = .3
+                        # # idea is that if 1+ names are locked, their connections will weigh score down less
+                        # if col_name in locked_names and row_name in locked_names:
+                        #     locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
+                        # elif col_name in locked_names or row_name in locked_names:
+                        #     locked_demerit = .2
+                        # else:
+                        #     locked_demerit = .3
 
-                        connection_weight = pairs_with_demerit + strength_demerit + locked_demerit
+                        # connection_weight = pairs_with_demerit + strength_demerit + locked_demerit
+                        connection_weight = pairs_with_demerit
                         weighted_edges.append((col_name, row_name, connection_weight))
                         connections.append((col_name, row_name, connection))
 

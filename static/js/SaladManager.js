@@ -614,75 +614,80 @@ var SaladManager = function() {
 
     self.generating = false;
 
+
     self.generate = function() {
-        if (!self.generating) {
-            self.generating = true;
-            $('#generating').show();
-            console.log('about to fetch')
-            fetch('/generate-salad', {
-                method: 'post',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    // present: self.getNamesFromSet(self.presentSet),
-                    // locked: self.getNamesFromSet(self.lockedSet)
-                    present: self.getPresentNames(),
-                    locked: self.getLockedNames()
-                })
-            }).then(function(response) {
-                if (!response.ok) {
-                    throw Error(response.statusText);
-                }
-                return response;
-            }).then(function(response) {
-                return response.json();
-            }).then(function(json) {
-                var presentNames = json['present_names'];
-                var selectedNames = json['selected_names'];
-                var lockedNames = json['locked_names'];
-                var generatedNames = json['generated_names'];
-
-                var presentNamesSet = new Set(presentNames);
-                var selectedNamesSet = new Set(selectedNames);
-                var lockedNamesSet = new Set(lockedNames);
-                var generatedNamesset = new Set(generatedNames);
-
-                self.ingredients.forEach(function(ingredient) {
-                    if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
-                        ingredient.add({
-                            selected: selectedNamesSet.has(ingredient.name),
-                            locked: lockedNamesSet.has(ingredient.name),
-                            connected: false
-                        });
-                        // self.getPresentSet().add(ingredient);
-                    } // no else clause, as I don't want to remove any ingredients added since the request was sent
-                    ingredient.selected = selectedNamesSet.has(ingredient.name);
-                    ingredient.locked = lockedNamesSet.has(ingredient.name);
-                    ingredient.render();
-                });
-
-                $('#generating').hide();
-                self.generating = false;
-                self.saveProjectToLocalStorage('');
-
-                setTimeout(function() {
-                    self.network.fit({
-                        nodes: selectedNames,
-                        animation: true
-                    });
-                }, 2000);
-            }).catch(function(error) {
-                console.log(error);
-                alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
-                $('#generating').hide();
-                self.generating = false;
-            });
-        } else {
-            console.log('Already generating.')
-        }
+        alert('The salad generator is out of service.');
     }
+
+    // self.generate = function() {
+    //     if (!self.generating) {
+    //         self.generating = true;
+    //         $('#generating').show();
+    //         console.log('about to fetch')
+    //         fetch('/generate-salad', {
+    //             method: 'post',
+    //             headers: {
+    //                 'Accept': 'application/json',
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 // present: self.getNamesFromSet(self.presentSet),
+    //                 // locked: self.getNamesFromSet(self.lockedSet)
+    //                 present: self.getPresentNames(),
+    //                 locked: self.getLockedNames()
+    //             })
+    //         }).then(function(response) {
+    //             if (!response.ok) {
+    //                 throw Error(response.statusText);
+    //             }
+    //             return response;
+    //         }).then(function(response) {
+    //             return response.json();
+    //         }).then(function(json) {
+    //             var presentNames = json['present_names'];
+    //             var selectedNames = json['selected_names'];
+    //             var lockedNames = json['locked_names'];
+    //             var generatedNames = json['generated_names'];
+    //
+    //             var presentNamesSet = new Set(presentNames);
+    //             var selectedNamesSet = new Set(selectedNames);
+    //             var lockedNamesSet = new Set(lockedNames);
+    //             var generatedNamesset = new Set(generatedNames);
+    //
+    //             self.ingredients.forEach(function(ingredient) {
+    //                 if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
+    //                     ingredient.add({
+    //                         selected: selectedNamesSet.has(ingredient.name),
+    //                         locked: lockedNamesSet.has(ingredient.name),
+    //                         connected: false
+    //                     });
+    //                     // self.getPresentSet().add(ingredient);
+    //                 } // no else clause, as I don't want to remove any ingredients added since the request was sent
+    //                 ingredient.selected = selectedNamesSet.has(ingredient.name);
+    //                 ingredient.locked = lockedNamesSet.has(ingredient.name);
+    //                 ingredient.render();
+    //             });
+    //
+    //             $('#generating').hide();
+    //             self.generating = false;
+    //             self.saveProjectToLocalStorage('');
+    //
+    //             setTimeout(function() {
+    //                 self.network.fit({
+    //                     nodes: selectedNames,
+    //                     animation: true
+    //                 });
+    //             }, 2000);
+    //         }).catch(function(error) {
+    //             console.log(error);
+    //             alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
+    //             $('#generating').hide();
+    //             self.generating = false;
+    //         });
+    //     } else {
+    //         console.log('Already generating.')
+    //     }
+    // }
 
     $('#generate').click(function() {
         self.generate();
