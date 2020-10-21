@@ -497,16 +497,16 @@ def generate_stir_fry():
 
                 # Weights super guess-y
                 if connection[0] == 'c':
-                    selected_g.add_edge(name_1, name_2, length=1, weight=.4) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=1, weight=.3) # prev .8
                 elif connection[0] == 'd':
                     # pairs_with_demerit = .5 # prev .6666
-                    selected_g.add_edge(name_1, name_2, length=.8, weight=.6) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.7, weight=.6) # prev .8
                 elif connection[0] == 'C':
                     # pairs_with_demerit = .4 # prev .5333
-                    selected_g.add_edge(name_1, name_2, length=.6, weight=.8) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.6, weight=.7) # prev .8
                 elif connection[0] == 'D':
                     # pairs_with_demerit = .3 # prev. .4
-                    selected_g.add_edge(name_1, name_2, length=.4, weight=1) # prev .8
+                    selected_g.add_edge(name_1, name_2, length=.3, weight=1) # prev .8
 
         # connections = []
         # weighted_edges = []
@@ -570,9 +570,34 @@ def generate_stir_fry():
         # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
         # print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
-        average_shortest_path_score = 1 / average_shortest_path_length * 2 - 3
-        # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
-        score += average_shortest_path_score * 5
+        pairing_score = 1 / average_shortest_path_length * 1.4 - 1 # good enough (for small, large pools)
+        # print('PAIRING SCORE', pairing_score)
+        score += pairing_score * 5
+
+        # Used for both strength and locked bonus:
+        node_degrees = list(selected_g.degree(weight='weight'))
+        average_degree = sum([node_degree[1] for node_degree in node_degrees]) / len(node_degrees)
+
+        # STRENGTH BONUS =======================================================
+        strength_above_average = 0
+        for node_degree in node_degrees:
+            if selected_ingredients['strong'][node_degree[0]] == 'Y':
+                strength_above_average += (node_degree[1] - average_degree)
+            elif selected_ingredients['strong'][node_degree[0]] == 'y':
+                strength_above_average += (node_degree[1] - average_degree) * .5
+        strength_score = strength_above_average * .2 + .5 # reasonable for small and full pools
+        # print('STRENGTH SCORE', strength_score)
+        score += strength_score
+
+        # LOCKED BONUS =========================================================
+        locked_above_average = 0
+        for node_degree in node_degrees:
+            if node_degree[0] in locked_names:
+                # print(node_degree[1])
+                locked_above_average += node_degree[1] - average_degree
+        locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
+        # print('LOCKED SCORE', locked_score)
+        score += locked_score * 2
 
     # FLAVOR BALANCE BONUS =============================================================================================
     # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -626,7 +651,9 @@ def generate_stir_fry():
 
         if top_score == None or score > top_score:
             top_selected_ingredients = selected_ingredients
-            top_pairing_score = average_shortest_path_score
+            top_pairing_score = pairing_score
+            top_strength_score = strength_score
+            top_locked_score = locked_score
             top_flavor_score = flavor_score
             top_food_group_score = food_group_score
             top_score = score
@@ -638,7 +665,9 @@ def generate_stir_fry():
                 'present_names': present_names,
                 'locked_names': locked_names,
                 'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
-                # 'pairing_bonus': top_average_shortest_path_score,
+                'pairing_bonus': top_pairing_score,
+                'strength_bonus': top_strength_score,
+                'locked_bonus': top_locked_score,
                 'flavor_bonus': top_flavor_score,
                 'food_group_bonus': top_food_group_score,
                 'score': top_score,
@@ -948,7 +977,6 @@ def generate_stir_fry_black_magic():
             print(str(iteration)+': NOT CONNECTED; SKIPPING TO NEXT ITERATION')
             continue
 
-
         score = 0
 
         # CONNECTED PAIRING BONUS ==============================================
@@ -957,8 +985,8 @@ def generate_stir_fry_black_magic():
         # ranges from roughly (0 to 1) * 5, tho could be a lil over or under that range
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
         # average_shortest_path_score = 1 / average_shortest_path_length * 1.2 - 1.1 # normalizes full house
-        average_shortest_path_score = 1 / average_shortest_path_length * 1.5 - 1.3 # normalizes small pool (& doesn't do bad w full house)
-        score += average_shortest_path_score * 5
+        pairing_score = 1 / average_shortest_path_length * 1.5 - 1.3 # normalizes small pool (& doesn't do bad w full house)
+        score += pairing_score * 5
         # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
 
         # Used for both strength and locked bonus:
@@ -1038,7 +1066,9 @@ def generate_stir_fry_black_magic():
         # print()
         if top_score == None or score > top_score:
             top_selected_ingredients = selected_ingredients
-            # top_average_shortest_path_score = average_shortest_path_score
+            top_pairing_score = pairing_score
+            top_strength_score = strength_score
+            top_locked_score = locked_score
             top_flavor_score = flavor_score
             top_food_group_score = food_group_score
             top_score = score
@@ -1050,7 +1080,9 @@ def generate_stir_fry_black_magic():
                 'present_names': present_names,
                 'locked_names': locked_names,
                 'generated_names': top_selected_ingredients['name'][~top_selected_ingredients['name'].isin(locked_names)].tolist(),
-                # 'pairing_bonus': top_average_shortest_path_score,
+                'pairing_bonus': top_pairing_score,
+                'strength_bonus': top_strength_score,
+                'locked_bonus': top_locked_score,
                 'flavor_bonus': top_flavor_score,
                 'food_group_bonus': top_food_group_score,
                 'score': top_score,
