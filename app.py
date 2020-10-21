@@ -381,7 +381,13 @@ def get_stir_fry_ingredients():
 
 @app.route('/generate-stir-fry', methods=['POST'])
 def generate_stir_fry():
-# TODO: account for if connected subgraph is impossible
+    n_salts = 1
+    n_fat_oils = 1
+    n_other_flavorings_min = 1
+    n_other_flavorings_max = 3
+    n_foodstuffs_min = 3
+    n_foodstuffs_max = 7
+
     content = request.get_json()
     locked_names = content['locked']
     present_names = content['present']
@@ -394,7 +400,6 @@ def generate_stir_fry():
         return(jsonify(data))
 
     stir_fry_data = stir_fry_flavor_data[stir_fry_flavor_data['name'].isin(present_names)].copy()
-    # stir_fry_data.reset_index(inplace=True)
 
     locked = stir_fry_data[stir_fry_data['name'].isin(locked_names)]
     locked_fat_oils = locked[locked['stir_fry_fat_oil'] == 'y']
@@ -450,45 +455,6 @@ def generate_stir_fry():
 
         selected_names = selected_ingredients['name'].values.tolist()
 
-        # selected_salts = locked_salts.append(the_rest_salts.sample(n_gen_salts))
-        # selected_fat_oils = locked_fat_oils.append(the_rest_fat_oils.sample(n_gen_fat_oils))
-        # selected_other_flavorings = locked_other_flavorings.append(the_rest_other_flavorings.sample(n_gen_other_flavorings))
-        # selected_foodstuffs = locked_foodstuffs.append(the_rest_foodstuffs.sample(n_gen_foodstuffs))
-        # selected_ingredients = selected_salts.append(selected_fat_oils).append(selected_other_flavorings).append(selected_foodstuffs)
-        # selected_names = selected_ingredients['name'].values.tolist()
-        # print('SELECTED NAMES', selected_names)
-
-        # lower_category_pairs = []
-        # lower_direct_pairs = []
-        # upper_category_pairs = []
-        # upper_direct_pairs = []
-        #
-        # # finicky but pretty fast
-        # for i, col_name in enumerate(selected_names):
-        #     for j, row_name in enumerate(selected_names[i+1:]):
-        #         connection = selected_ingredients[col_name].tolist()[i+1+j] # this is what is finicky
-        #         print('CONNECTION', connection)
-        #         if connection == 'c':
-        #             lower_category_pairs.append((col_name, row_name,))
-        #         elif connection == 'd':
-        #             lower_direct_pairs.append((col_name, row_name,))
-        #         elif connection == 'C':
-        #             upper_category_pairs.append((col_name, row_name,))
-        #         elif connection == 'D':
-        #             upper_direct_pairs.append((col_name, row_name,))
-        # lower_pairs = lower_category_pairs + lower_direct_pairs
-        # upper_pairs = upper_category_pairs + upper_direct_pairs
-        # all_pairs = lower_pairs + upper_pairs
-        # print('ALL PAIRS', all_pairs)
-        # selected_g = nx.Graph()
-        # selected_g.add_nodes_from(selected_names)
-        # selected_g.add_edges_from(lower_category_pairs, length=2)
-        # selected_g.add_edges_from(lower_direct_pairs, length=1.5)
-        # selected_g.add_edges_from(upper_category_pairs, length=1.2)
-        # selected_g.add_edges_from(upper_direct_pairs, length=1)
-        # connected_components = list(nx.connected_components(selected_g))
-
-
         selected_g = nx.Graph()
         selected_g.add_nodes_from(selected_names)
 
@@ -509,55 +475,6 @@ def generate_stir_fry():
                     # pairs_with_demerit = .3 # prev. .4
                     selected_g.add_edge(name_1, name_2, length=.3, weight=1) # prev .8
 
-        # connections = []
-        # weighted_edges = []
-        #
-        # for i_1, name_1 in enumerate(selected_names[:-1]):
-        #     # print('NAME 1', name_1)
-        #     for i_2, name_2 in enumerate(selected_names[i_1+1:], i_1+1):
-        #         # print('NAME 2', name_2)
-        #         # print('STIR FRY FLAVOR DATA INDEX', stir_fry_flavor_data.index)
-        #         # print('SELECTED INGREDIENTS NAME 1', selected_ingredients[name_1], type(selected_ingredients[name_1]), list(selected_ingredients[name_1]))
-        #         connection = selected_ingredients[name_1][name_2]
-        #         if connection[0] != '_':
-        #             if connection[0] == 'c':
-        #                 pairs_with_demerit = .6 # prev .8
-        #             elif connection[0] == 'd':
-        #                 pairs_with_demerit = .5 # prev .6666
-        #             elif connection[0] == 'C':
-        #                 pairs_with_demerit = .4 # prev .5333
-        #             elif connection[0] == 'D':
-        #                 pairs_with_demerit = .3 # prev. .4
-        #             else:
-        #                 print('CONNECTION', type(connection[0]), connection[0], type(connection), connection)
-        #                 print('OH NO! BAD PAIRING VALUE.')
-        #
-        #             if connection[1] == '_':
-        #                 strength_demerit = .2
-        #             elif connection[1] == 's':
-        #                 strength_demerit = .15
-        #             elif connection[1] == 'S':
-        #                 strength_demerit = .1
-        #             else:
-        #                 print('OH NO! BAD STRENGTH VALUE.')
-        #
-        #             # idea is that if 1+ names are locked, their connections will weigh score down less
-        #             if name_1 in locked_names and name_2 in locked_names:
-        #                 locked_demerit = .1 # should actually be the same for every iteration, given that locked don't change
-        #             elif name_1 in locked_names or name_2 in locked_names:
-        #                 locked_demerit = .15
-        #             else:
-        #                 locked_demerit = .2
-        #
-        #             connection_weight = pairs_with_demerit + strength_demerit + locked_demerit
-        #             weighted_edges.append((name_1, name_2, connection_weight))
-        #             connections.append((name_1, name_2, connection))
-        #
-        # selected_g = nx.Graph()
-        # selected_g.add_nodes_from(selected_names)
-        # selected_g.add_weighted_edges_from(weighted_edges)
-        # connected_components = list(nx.connected_components(selected_g))
-
         # Try again, friend
         if not nx.is_connected(selected_g):
             print(str(iteration)+': NOT CONNECTED; SKIPPING TO NEXT ITERATION')
@@ -570,7 +487,6 @@ def generate_stir_fry():
         # and also encompasses strength-ness and locked-ness
         # ranges from roughly (0 to 1) * 3, tho could be a lil over or under that range
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
-        # print('AVERAGE SHORTEST PATH LENGTH', average_shortest_path_length)
         pairing_score = 1 / average_shortest_path_length * 1.4 - 1 # good enough (for small, large pools)
         # print('PAIRING SCORE', pairing_score)
         score += pairing_score * 5
@@ -594,7 +510,6 @@ def generate_stir_fry():
         locked_above_average = 0
         for node_degree in node_degrees:
             if node_degree[0] in locked_names:
-                # print(node_degree[1])
                 locked_above_average += node_degree[1] - average_degree
         locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
         # print('LOCKED SCORE', locked_score)
@@ -683,6 +598,7 @@ def generate_stir_fry():
     return(jsonify(data))
 
 # BLACK MAGIC SETUP ============================================================
+# Darn, this pollutes namespace for salad... ugh. Is it fast enough to include inside? Should I prepend "stir_fry_"?
 salt_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_salt'] == 'y']['name'])
 fat_oil_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_fat_oil'] == 'y']['name'])
 other_flavoring_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_flavoring'] == 'y']['name']) - salt_set
@@ -690,21 +606,6 @@ foodstuff_set = set(stir_fry_flavor_data['name']) - salt_set - fat_oil_set - oth
 mushroom_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_mushroom'] == 'y']['name'])
 bean_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_protein_bean'] == 'y'])
 grain_set = set(stir_fry_flavor_data[stir_fry_flavor_data['stir_fry_grain'] == 'y'])
-
-n_salts = 1
-n_fat_oils = 1
-n_other_flavorings_min = 1
-n_other_flavorings_max = 3
-n_foodstuffs_min = 3
-n_foodstuffs_max = 7
-# n_mushrooms_min = 0
-mushrooms_cap = 1 # possible to have more than this, if there are locked mushrooms (I don't update sets after locked/gen is established)
-n_beans_max = 1
-n_grains_max = 1
-# n_beans_min = 0
-# n_beans_max = 2
-# n_grains_min = 0
-# n_grains_max = 2
 
 reasonable_clique_upper = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_reasonable_clique_upper.pickle'))
 
@@ -741,6 +642,16 @@ def get_first_name_in_set(sorted_tuples, food_set):
 
 @app.route('/generate-stir-fry-black-magic', methods=['POST'])
 def generate_stir_fry_black_magic():
+    n_salts = 1
+    n_fat_oils = 1
+    n_other_flavorings_min = 1
+    n_other_flavorings_max = 3
+    n_foodstuffs_min = 3
+    n_foodstuffs_max = 7
+    mushrooms_cap = 1 # possible to have more than this, if there are locked mushrooms (I don't update sets after locked/gen is established)
+    n_beans_max = 1
+    n_grains_max = 1
+
     content = request.get_json()
     locked_names = content['locked']
     present_names = content['present']

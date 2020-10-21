@@ -1,0 +1,108 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1>None</h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "green", "id": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "label": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "shape": "dot"}, {"color": "brown", "id": "FLAXSEEDS", "label": "FLAXSEEDS", "shape": "dot"}, {"color": "green", "id": "LEEKS", "label": "LEEKS", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, SMOKED", "label": "SALT, SMOKED", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, OLIVE", "label": "OIL, OLIVE", "shape": "dot"}, {"color": "lightgrey", "id": "PAPRIKA (see also PAPRIKA, SMOKED)", "label": "PAPRIKA (see also PAPRIKA, SMOKED)", "shape": "dot"}, {"color": "lightgrey", "id": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)", "label": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)", "shape": "dot"}, {"color": "lightgrey", "id": "LEMONS", "label": "LEMONS", "shape": "dot"}, {"color": "tan", "id": "RICE, WILD", "label": "RICE, WILD", "shape": "dot"}, {"color": "green", "id": "CHILES, JALAPE\u00d1O", "label": "CHILES, JALAPE\u00d1O", "shape": "dot"}, {"color": "orange", "id": "PINEAPPLE", "label": "PINEAPPLE", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "lightgrey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "FLAXSEEDS"}, {"color": "lightgrey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "LEEKS"}, {"color": "grey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "OIL, OLIVE"}, {"color": "grey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "PAPRIKA (see also PAPRIKA, SMOKED)"}, {"color": "grey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)"}, {"color": "grey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "LEMONS"}, {"color": "darkgrey", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "RICE, WILD"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "black", "from": "CILANTRO (aka CHINESE PARSLEY or FRESH CORIANDER LEAF)", "physics": false, "to": "PINEAPPLE"}, {"color": "lightgrey", "from": "FLAXSEEDS", "physics": false, "to": "LEEKS"}, {"color": "grey", "from": "FLAXSEEDS", "physics": false, "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "FLAXSEEDS", "physics": false, "to": "PAPRIKA (see also PAPRIKA, SMOKED)"}, {"color": "grey", "from": "FLAXSEEDS", "physics": false, "to": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)"}, {"color": "grey", "from": "FLAXSEEDS", "physics": false, "to": "LEMONS"}, {"color": "lightgrey", "from": "FLAXSEEDS", "physics": false, "to": "RICE, WILD"}, {"color": "lightgrey", "from": "FLAXSEEDS", "physics": false, "to": "PINEAPPLE"}, {"color": "lightgrey", "from": "LEEKS", "physics": false, "to": "SALT, SMOKED"}, {"color": "black", "from": "LEEKS", "physics": false, "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "LEEKS", "physics": false, "to": "PAPRIKA (see also PAPRIKA, SMOKED)"}, {"color": "lightgrey", "from": "LEEKS", "physics": false, "to": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)"}, {"color": "black", "from": "LEEKS", "physics": false, "to": "LEMONS"}, {"color": "grey", "from": "LEEKS", "physics": false, "to": "RICE, WILD"}, {"color": "lightgrey", "from": "SALT, SMOKED", "physics": false, "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "SALT, SMOKED", "physics": false, "to": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)"}, {"color": "lightgrey", "from": "SALT, SMOKED", "physics": false, "to": "RICE, WILD"}, {"color": "lightgrey", "from": "SALT, SMOKED", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "lightgrey", "from": "SALT, SMOKED", "physics": false, "to": "PINEAPPLE"}, {"color": "lightgrey", "from": "OIL, OLIVE", "physics": false, "to": "PAPRIKA (see also PAPRIKA, SMOKED)"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "LEMONS"}, {"color": "black", "from": "OIL, OLIVE", "physics": false, "to": "RICE, WILD"}, {"color": "grey", "from": "OIL, OLIVE", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "grey", "from": "OIL, OLIVE", "physics": false, "to": "PINEAPPLE"}, {"color": "grey", "from": "PAPRIKA (see also PAPRIKA, SMOKED)", "physics": false, "to": "LEMONS"}, {"color": "grey", "from": "PAPRIKA (see also PAPRIKA, SMOKED)", "physics": false, "to": "RICE, WILD"}, {"color": "lightgrey", "from": "PAPRIKA (see also PAPRIKA, SMOKED)", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "grey", "from": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)", "physics": false, "to": "LEMONS"}, {"color": "darkgrey", "from": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)", "physics": false, "to": "RICE, WILD"}, {"color": "lightgrey", "from": "SESAME SEEDS\u2014IN GENERAL (aka GOMA)", "physics": false, "to": "PINEAPPLE"}, {"color": "black", "from": "LEMONS", "physics": false, "to": "RICE, WILD"}, {"color": "grey", "from": "LEMONS", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "grey", "from": "LEMONS", "physics": false, "to": "PINEAPPLE"}, {"color": "lightgrey", "from": "RICE, WILD", "physics": false, "to": "CHILES, JALAPE\u00d1O"}, {"color": "darkgrey", "from": "RICE, WILD", "physics": false, "to": "PINEAPPLE"}, {"color": "grey", "from": "CHILES, JALAPE\u00d1O", "physics": false, "to": "PINEAPPLE"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>

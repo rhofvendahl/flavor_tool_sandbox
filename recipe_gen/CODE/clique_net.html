@@ -1,0 +1,108 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1>None</h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 500px;
+            height: 500px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"color": "brown", "id": "LENTILS, GREEN", "label": "LENTILS, GREEN", "shape": "dot"}, {"color": "green", "id": "SPINACH", "label": "SPINACH", "shape": "dot"}, {"color": "lightgrey", "id": "OIL, OLIVE", "label": "OIL, OLIVE", "shape": "dot"}, {"color": "brown", "id": "PEANUTS and PEANUT BUTTER", "label": "PEANUTS and PEANUT BUTTER", "shape": "dot"}, {"color": "green", "id": "GARLIC", "label": "GARLIC", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, CHANTERELLE", "label": "MUSHROOMS, CHANTERELLE", "shape": "dot"}, {"color": "lightgrey", "id": "LEMONS", "label": "LEMONS", "shape": "dot"}, {"color": "green", "id": "MUSHROOMS, BLACK TRUMPET", "label": "MUSHROOMS, BLACK TRUMPET", "shape": "dot"}, {"color": "lightgrey", "id": "SALT, SEA", "label": "SALT, SEA", "shape": "dot"}]);
+        edges = new vis.DataSet([{"color": "black", "from": "LENTILS, GREEN", "physics": true, "to": "SPINACH"}, {"color": "black", "from": "LENTILS, GREEN", "physics": true, "to": "OIL, OLIVE"}, {"color": "black", "from": "LENTILS, GREEN", "physics": true, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "LENTILS, GREEN", "physics": true, "to": "GARLIC"}, {"color": "black", "from": "LENTILS, GREEN", "physics": true, "to": "LEMONS"}, {"color": "whitesmoke", "from": "LENTILS, GREEN", "physics": true, "to": "SALT, SEA"}, {"color": "black", "from": "SPINACH", "physics": true, "to": "OIL, OLIVE"}, {"color": "lightgrey", "from": "SPINACH", "physics": true, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "SPINACH", "physics": true, "to": "GARLIC"}, {"color": "lightgrey", "from": "SPINACH", "physics": true, "to": "MUSHROOMS, CHANTERELLE"}, {"color": "black", "from": "SPINACH", "physics": true, "to": "LEMONS"}, {"color": "lightgrey", "from": "SPINACH", "physics": true, "to": "MUSHROOMS, BLACK TRUMPET"}, {"color": "whitesmoke", "from": "SPINACH", "physics": true, "to": "SALT, SEA"}, {"color": "black", "from": "OIL, OLIVE", "physics": true, "to": "PEANUTS and PEANUT BUTTER"}, {"color": "black", "from": "OIL, OLIVE", "physics": true, "to": "GARLIC"}, {"color": "black", "from": "OIL, OLIVE", "physics": true, "to": "MUSHROOMS, CHANTERELLE"}, {"color": "black", "from": "OIL, OLIVE", "physics": true, "to": "LEMONS"}, {"color": "black", "from": "OIL, OLIVE", "physics": true, "to": "MUSHROOMS, BLACK TRUMPET"}, {"color": "black", "from": "PEANUTS and PEANUT BUTTER", "physics": true, "to": "GARLIC"}, {"color": "black", "from": "GARLIC", "physics": true, "to": "MUSHROOMS, CHANTERELLE"}, {"color": "black", "from": "GARLIC", "physics": true, "to": "LEMONS"}, {"color": "lightgrey", "from": "GARLIC", "physics": true, "to": "MUSHROOMS, BLACK TRUMPET"}, {"color": "whitesmoke", "from": "GARLIC", "physics": true, "to": "SALT, SEA"}, {"color": "whitesmoke", "from": "MUSHROOMS, CHANTERELLE", "physics": true, "to": "LEMONS"}, {"color": "whitesmoke", "from": "MUSHROOMS, CHANTERELLE", "physics": true, "to": "SALT, SEA"}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": false,
+            "type": "continuous"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>
