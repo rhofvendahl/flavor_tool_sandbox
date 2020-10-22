@@ -127,10 +127,18 @@ var StirFryIngredient = function(stirFryManager, data) {
             // dirty node
             if ((!self.prevPresent) || (self.selected != self.prevSelected) || (self.locked != self.prevLocked) || (self.connected != self.prevConnected) || (self.highlighted != self.prevHighlighted) || (self.menu != self.prevMenu)) {
                 var backgroundColor;
+                // var fontColor;
+                // var fontSize;
                 if (self.selected) {
                     backgroundColor = self.color;
+                    // fontColor = 'black';
+                    // fontSize = 13;
+                    // fontColor = 'red';
                 } else {
                     backgroundColor = 'white';
+                    // fontColor = '#666666';
+                    // fontSize = 11;
+                    // fontColor = 'black';
                 }
 
                 var borderColor;
@@ -157,6 +165,10 @@ var StirFryIngredient = function(stirFryManager, data) {
                             'border': borderColor
                         },
                     },
+                    // font: {
+                    //     color: fontColor,
+                    //     size: fontSize,
+                    // },
                     borderWidth: borderWidth,
                     borderWidthSelected: borderWidth,
                     shape: 'dot',

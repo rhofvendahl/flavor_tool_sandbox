@@ -10,19 +10,33 @@ var StirFryManager = function() {
         nodes: {
             borderWidthSelected: 2,
             font: {
-                size: 12
+                size: 12,
             },
-            title: ''
+            title: '',
+            shapeProperties: {
+                interpolation: false, // should be unnecessary, but might help with leak
+            },
         },
         physics: {
-            maxVelocity: 5
+            // maxVelocity: 20,
+            timestep: .25,
+            barnesHut: {
+              gravitationalConstant: -2000,
+              centralGravity: 0.2,
+              springLength: 150,
+              springConstant: 0.03,
+            },
         },
         interaction: {
-            tooltipDelay: 1200
+            tooltipDelay: 1200,
         },
         edges: {
-            chosen: false
-        }
+            chosen: false,
+            smooth: {
+                type: 'continuous',
+            },
+            // length: 200,
+        },
     };
     self.network = new vis.Network(container, data, options);
 
@@ -313,6 +327,13 @@ var StirFryManager = function() {
                     ingredient.add();
                 });
             }
+
+            setTimeout(function() {
+                self.network.fit({
+                    nodes: self.getSelectedNames(),
+                    animation: true,
+                });
+            }, 2600);
         }).catch(function(error) {
             console.log(error);
         });
@@ -472,6 +493,12 @@ var StirFryManager = function() {
         $('#menu-wrapper').show();
         self.network.selectNodes([menuId]);
         self.getFromName(self.menuId).render();
+
+        self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
+            self.endMenu();
+            clearTimeout(self.endMenuTimeout); // just to be safe
+            self.endMenuTimeout = null;
+        }, 5000); // how long it takes menu to disappear
     }
 
     self.endMenu = function() {
@@ -511,8 +538,10 @@ var StirFryManager = function() {
     self.network.on('hidePopup', function() {
         if (self.mouseOnNode) {
             self.mouseOnNode = false;
+            clearTimeout(self.endMenuTimeout);
             self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
                 self.endMenu();
+                clearTimeout(self.endMenuTimeout); // just to be safe
                 self.endMenuTimeout = null;
             }, 300); // how long it takes menu to disappear
         }
