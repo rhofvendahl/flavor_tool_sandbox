@@ -355,6 +355,11 @@ var StirFryManager = function() {
         self.saveProjectToLocalStorage('');
     }
 
+    self.network.on('hold', function() {
+        clearTimeout(self.clickTimeout);
+        self.clickTimeout = null;
+    });
+
     self.network.on('click', function(properties) {
         $('#present').selectivity('close');
         $('.selectivity-multiple-input').attr('placeholder', 'Search ingredients');
