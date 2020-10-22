@@ -74,25 +74,25 @@ body {
     overflow-y: auto;
 }
 
-#green {
+.green {
     color: green;
 }
-#orange {
+.orange {
     color: orange;
 }
-#brown {
+.brown {
     color: brown;
 }
-#tan {
+.tan {
     color: tan;
 }
-#grey {
+.grey {
     color: grey;
 }
-#black {
+.black {
     color: black;
 }
-#red {
+.red {
     color: red;
 }
 
