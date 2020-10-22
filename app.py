@@ -445,7 +445,7 @@ def generate_stir_fry():
     n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
 
-    n_iterations = 200
+    n_iterations = 175
     top_score = None
     for iteration in range(n_iterations):
         n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
@@ -854,7 +854,7 @@ def generate_stir_fry_black_magic():
     ok_cliques = ok_cliques.sort_values('ok_score', ascending=False)
 
     top_score = None
-    n_iterations = 250
+    n_iterations = 200
     for iteration in range(n_iterations):
         n_total_other_flavorings_actual = random.randrange(n_total_other_flavorings_actual_min, n_total_other_flavorings_actual_max+1)
         n_total_foodstuffs_actual = random.randrange(n_total_foodstuffs_actual_min, n_total_foodstuffs_actual_max+1)
