@@ -676,6 +676,13 @@ var StirFryManager = function() {
                             animation: true
                         });
                     }, 2200);
+
+                    if (!self.existsInLocalStorage('reciped') || self.getFromLocalStorage('reciped') == false) {
+                        console.log('Showing "Recipe" to first time generators!');
+                        $('#about-window').show();
+                        $('#recipe').click();
+                        self.saveToLocalStorage('reciped', true);
+                    }
                 } else if (json['outcome'] == 'failure') {
                     if (json['message']) {
                         alert(json['message']);
@@ -762,31 +769,31 @@ var StirFryManager = function() {
         var html = '';
         if (Array.from(self.getSelectedSet()).length > 1) {
             earlyNames.forEach(function(name) {
-                html += '<li>[early] ' + name + '</li>';
+                html += '<li>[early] <strong>' + name + '</strong></li>';
             });
             earlyMidNames.forEach(function(name) {
-                html += '<li>[early or mid] ' + name + '</li>';
+                html += '<li>[early or mid] <strong>' + name + '</strong></li>';
             });
             earlyMidLateNames.forEach(function(name) {
-                html += '<li>[early or mid or late] ' + name + '</li>';
+                html += '<li>[early or mid or late] <strong>' + name + '</strong></li>';
             });
             midNames.forEach(function(name) {
-                html += '<li>[mid] ' + name + '</li>';
+                html += '<li>[mid] <strong>' + name + '</strong></li>';
             });
             midLateNames.forEach(function(name) {
-                html += '<li>[mid or late] ' + name + '</li>';
+                html += '<li>[mid or late] <strong>' + name + '</strong></li>';
             });
             midLateFlavoringNames.forEach(function(name) {
-                html += '<li>[mid or late or flavoring] ' + name + '</li>';
+                html += '<li>[mid or late or flavoring] <strong>' + name + '</strong></li>';
             });
             lateNames.forEach(function(name) {
-                html += '<li>[late] ' + name + '</li>';
+                html += '<li>[late] <strong>' + name + '</strong></li>';
             });
             lateFlavoringNames.forEach(function(name) {
-                html += '<li>[late or flavoring] ' + name + '</li>';
+                html += '<li>[late or flavoring] <strong>' + name + '</strong></li>';
             });
             flavoringNames.forEach(function(name) {
-                html += '<li>[flavoring] ' + name + '</li>';
+                html += '<li>[flavoring] <strong>' + name + '</strong></li>';
             });
         } else {
             html += '<li>You haven\'t selected any ingredients! This won\'nt be much of a stir fry, will it?</li>'

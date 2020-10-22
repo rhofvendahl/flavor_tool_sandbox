@@ -703,7 +703,6 @@ def generate_stir_fry_black_magic():
     content = request.get_json()
     locked_names = content['locked']
     present_names = content['present']
-    print('PRESENT NAME LEN', len(present_names))
 
     if len(present_names) < 7:
         data = {
