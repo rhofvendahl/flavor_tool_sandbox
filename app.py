@@ -445,7 +445,7 @@ def generate_stir_fry():
     n_additional_foodstuffs_actual_max = min(n_additional_foodstuffs_needed_max, len(unlocked_foodstuffs))
     n_total_foodstuffs_actual_max = n_additional_foodstuffs_actual_max + len(locked_foodstuffs)
 
-    n_iterations = 300
+    n_iterations = 200
     top_score = None
     for iteration in range(n_iterations):
         n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
@@ -537,7 +537,7 @@ def generate_stir_fry():
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
         pairing_score = 1 / average_shortest_path_length * 1.4 - 1 # good enough (for small, large pools)
         # print('PAIRING SCORE', pairing_score)
-        score += pairing_score * 5
+        score += pairing_score * 4
 
         # Used for both strength and locked bonus:
         node_degrees = list(selected_g.degree(weight='weight'))
@@ -561,7 +561,7 @@ def generate_stir_fry():
                 locked_above_average += node_degree[1] - average_degree
         locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
         # print('LOCKED SCORE', locked_score)
-        score += locked_score * 2
+        score += locked_score
 
     # FLAVOR BALANCE BONUS =============================================================================================
     # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -854,7 +854,7 @@ def generate_stir_fry_black_magic():
     ok_cliques = ok_cliques.sort_values('ok_score', ascending=False)
 
     top_score = None
-    n_iterations = 200
+    n_iterations = 150
     for iteration in range(n_iterations):
         n_total_other_flavorings_actual = random.randrange(n_total_other_flavorings_actual_min, n_total_other_flavorings_actual_max+1)
         n_total_foodstuffs_actual = random.randrange(n_total_foodstuffs_actual_min, n_total_foodstuffs_actual_max+1)
@@ -1020,7 +1020,7 @@ def generate_stir_fry_black_magic():
         average_shortest_path_length = nx.average_shortest_path_length(selected_g, weight='length')
         # average_shortest_path_score = 1 / average_shortest_path_length * 1.2 - 1.1 # normalizes full house
         pairing_score = 1 / average_shortest_path_length * 1.5 - 1.3 # normalizes small pool (& doesn't do bad w full house)
-        score += pairing_score * 5
+        score += pairing_score * 3
         # print('AVERAGE SHORTEST PATH SCORE', average_shortest_path_score)
 
         # Used for both strength and locked bonus:
@@ -1046,7 +1046,7 @@ def generate_stir_fry_black_magic():
                 locked_above_average += node_degree[1] - average_degree
         locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
         # print('LOCKED SCORE', locked_score)
-        score += locked_score * 2
+        score += locked_score
 
         # FLAVOR BALANCE BONUS =================================================
         # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
@@ -1079,7 +1079,7 @@ def generate_stir_fry_black_magic():
         flavor_score += spicy_score*2 # can be nice
         flavor_score = flavor_score * .2 - 1.3 # yields reasonable scores w full or small pool
 
-        score += flavor_score
+        score += flavor_score * 2
         # print('FLAVOR SCORE', flavor_score)
 
         # FOOD GROUPS BONUS ==========================================================================================
