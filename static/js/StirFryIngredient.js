@@ -72,11 +72,11 @@ var StirFryIngredient = function(stirFryManager, data) {
             physics = true;
             hidden = false;
         } else if (connectionType == 'uc') {
-            edgeColor = 'lightgrey';
+            edgeColor = '#BBBBBB';
             physics = true;
             hidden = false;
         } else if (connectionType == 'ld') {
-            edgeColor = 'whitesmoke';
+            edgeColor = '#EEEEEE';
             physics = self.selected && other.selected;
             hidden = false;
         } else {
