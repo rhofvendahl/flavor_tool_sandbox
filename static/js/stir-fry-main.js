@@ -3,7 +3,7 @@ $(document).ready(function() {
     stirFryManager.load();
     gtag('event', 'page_load', {
         'event_category': 'page',
-        'event_label': 'Load Page,
+        'event_label': 'Load Page',
         'non_interaction': true,
     });
 
