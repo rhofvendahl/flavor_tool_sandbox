@@ -350,6 +350,11 @@ var StirFryManager = function() {
             ingredient.selected = false;
         } else {
             ingredient.selected = true;
+            gtag('event', 'ingredient_select', {
+                'event_category': 'ingredient',
+                'event_label': 'Select Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
         }
         ingredient.render();
         self.saveProjectToLocalStorage('');
@@ -392,7 +397,6 @@ var StirFryManager = function() {
                 'event_label': 'Lock Ingredient: ' + ingredient.name,
                 'non_interaction': true,
             });
-
         }
         ingredient.render();
         self.saveProjectToLocalStorage('');
@@ -414,6 +418,11 @@ var StirFryManager = function() {
             ingredient.connected = false;
         } else {
             ingredient.connected = true;
+            gtag('event', 'ingredient_connect', {
+                'event_category': 'ingredient',
+                'event_label': 'Connect Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
         }
         ingredient.render();
         self.saveProjectToLocalStorage('');
@@ -587,9 +596,10 @@ var StirFryManager = function() {
             self.saveProjectToLocalStorage(projectName);
             console.log('SAVED');
 
+            var selectedNamesString = self.getSelectedNames().join(' + ');
             gtag('event', 'project_save', {
                 'event_category': 'project',
-                'event_label': 'Save Stir-Fry: ' + projectName,
+                'event_label': 'Save Stir-Fry ' + projectName + ': ' + selectedNamesString,
                 'non_interaction': true,
             });
         }
@@ -624,9 +634,10 @@ var StirFryManager = function() {
                 console.log('LOADED');
                 self.saveProjectToLocalStorage('');
 
+                var selectedNamesString = self.getSelectedNames().join(' + ');
                 gtag('event', 'project_load', {
                     'event_category': 'project',
-                    'event_label': 'Load Stir-Fry: ' + projectName,
+                    'event_label': 'Load Stir-Fry ' + projectName + ': ' + selectedNamesString,
                     'non_interaction': true,
                 });
             }
