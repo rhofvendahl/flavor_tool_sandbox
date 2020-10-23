@@ -21,7 +21,7 @@ var StirFryManager = function() {
             // maxVelocity: 20,
             timestep: .25,
             barnesHut: {
-              gravitationalConstant: -2000,
+              gravitationalConstant: -3000,
               centralGravity: 0.2,
               springLength: 150,
               springConstant: 0.03,
