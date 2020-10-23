@@ -386,7 +386,7 @@ def generate_stir_fry():
     n_fat_oils = 1
     n_other_flavorings_min = 1
     n_other_flavorings_max = 3
-    n_foodstuffs_min = 3
+    n_foodstuffs_min = 4
     n_foodstuffs_max = 7
 
     content = request.get_json()
@@ -484,22 +484,22 @@ def generate_stir_fry():
             continue
 
         selected_names_so_far = selected_ingredients['name'].tolist()
-
+        # print('valid neighbor counts', valid_neighbor_counts)
         if n_additional_salts_actual > 0:
             additional_salts_pool = unlocked_salts[~unlocked_salts['name'].isin(selected_names_so_far)]
-            additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_salts_pool['name']]
+            additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_salts_pool['name']]
             selected_ingredients = selected_ingredients.append(additional_salts_pool.sample(n_additional_salts_actual, weights='neighbor_counts_xtreme'))
         if n_additional_fat_oils_actual > 0:
             additional_fat_oils_pool = unlocked_fat_oils[~unlocked_fat_oils['name'].isin(selected_names_so_far)]
-            additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_fat_oils_pool['name']]
+            additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_fat_oils_pool['name']]
             selected_ingredients = selected_ingredients.append(additional_fat_oils_pool.sample(n_additional_fat_oils_actual, weights='neighbor_counts_xtreme'))
         if n_additional_other_flavorings_actual > 0:
             additional_other_flavorings_pool = unlocked_other_flavorings[~unlocked_other_flavorings['name'].isin(selected_names_so_far)]
-            additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_other_flavorings_pool['name']]
+            additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_other_flavorings_pool['name']]
             selected_ingredients = selected_ingredients.append(additional_other_flavorings_pool.sample(n_additional_other_flavorings_actual, weights='neighbor_counts_xtreme'))
         if n_additional_foodstuffs_actual > 0:
             additional_foodstuffs_pool = unlocked_foodstuffs[~unlocked_foodstuffs['name'].isin(selected_names_so_far)]
-            additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_foodstuffs_pool['name']]
+            additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_foodstuffs_pool['name']]
             selected_ingredients = selected_ingredients.append(additional_foodstuffs_pool.sample(n_additional_foodstuffs_actual, weights='neighbor_counts_xtreme'))
 
         selected_names = selected_ingredients['name'].tolist()
@@ -555,13 +555,17 @@ def generate_stir_fry():
         # print('STRENGTH SCORE', strength_score)
         score += strength_score
 
-        # LOCKED BONUS =========================================================
-        locked_above_average = 0
-        for node_degree in node_degrees:
-            if node_degree[0] in locked_names:
-                locked_above_average += node_degree[1] - average_degree
-        locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
-        # print('LOCKED SCORE', locked_score)
+        if len(locked) > 0:
+            # LOCKED BONUS =========================================================
+            locked_above_average = 0
+            for node_degree in node_degrees:
+                if node_degree[0] in locked_names:
+                    locked_above_average += node_degree[1] - average_degree
+            locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
+            # print('LOCKED SCORE', locked_score)
+            score += locked_score * 2
+        else:
+            locked_score = 0
         score += locked_score
 
     # FLAVOR BALANCE BONUS =============================================================================================
@@ -599,21 +603,51 @@ def generate_stir_fry():
         score += flavor_score
 
         # FOOD GROUPS BONUS ==========================================================================================
-        if 'y' in selected_ingredients['stir_fry_protein'].values:
-            protein_score = .5
-        else:
-            protein_score = 0
+        n_protein = (selected_ingredients['stir_fry_protein'] == 'y').sum()
+        n_fruit = (selected_ingredients['stir_fry_fruit'] == 'y').sum()
+        n_grain = (selected_ingredients['stir_fry_grain'] == 'y').sum()
+        n_leafy = (selected_ingredients['veg_leafy'] == 'y').sum()
 
-        if 'y' in selected_ingredients['stir_fry_fruit'].values:
-            fruit_score = .5
-        else:
-            fruit_score = 0
+        food_group_score = .5
 
-        food_group_score = protein_score + fruit_score
-        # print('PROTEIN FRUIT', protein_score, fruit_score)
+        if n_protein in range(1, 3):
+            food_group_score += .25
+        if n_protein == 3:
+            food_group_score -= .25
+        if n_protein > 3:
+            food_group_score -= .5
+
+        if n_fruit == 1:
+            food_group_score += .25
+        if n_fruit > 2:
+            food_group_score -= .5
+
+        if n_grain > 1:
+            food_group_score -= .25
+        if n_grain > 2:
+            food_group_score -= .5
+
+        if n_leafy > 1:
+            food_group_score -= .25
+        if n_leafy > 2:
+            food_group_score -= .5
+
+        # if 'y' in selected_ingredients['stir_fry_protein'].sum():
+        #     protein_score = .5
+        # else:
+        #     protein_score = 0
+        #
+        # if 'y' in selected_ingredients['stir_fry_fruit'].values:
+        #     fruit_score = .5
+        # else:
+        #     fruit_score = 0
+
+        # food_group_score = protein_score + fruit_score
+        # print('FOOD GROUP SCORE', food_group_score)
         score += food_group_score
 
-
+        # print('score', score)
+        # print()
         if top_score == None or score > top_score:
             top_selected_ingredients = selected_ingredients
             top_pairing_score = pairing_score
@@ -695,7 +729,7 @@ def generate_stir_fry_black_magic():
     n_fat_oils = 1
     n_other_flavorings_min = 1
     n_other_flavorings_max = 3
-    n_foodstuffs_min = 3
+    n_foodstuffs_min = 4
     n_foodstuffs_max = 7
     mushrooms_cap = 1 # possible to have more than this, if there are locked mushrooms (I don't update sets after locked/gen is established)
     n_beans_max = 1
@@ -897,30 +931,31 @@ def generate_stir_fry_black_magic():
                     valid_neighbor_counts[neighbor] = valid_neighbor_counts.get(neighbor, 0) + 1
 
             selected_ingredients = present[present['name'].isin(ingredients_so_far_set)]
+            # print('valid neighbor counts', valid_neighbor_counts)
 
             # the idea is that with a low weight, non-neighbors will only be selected after neighbors
             # counts are squared to exaggerate the preference for an ingredient being neighbor to many selected ingredients
             if n_additional_non_clique_salts > 0:
                 additional_salts_pool = present_salts[~present_salts['name'].isin(salts_so_far_set)]
-                additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_salts_pool['name']]
+                additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_salts_pool['name']]
                 additional_salts = additional_salts_pool.sample(n_additional_non_clique_salts, weights='neighbor_counts_xtreme')
                 selected_ingredients = selected_ingredients.append(additional_salts)
 
             if n_additional_non_clique_fat_oils > 0:
                 additional_fat_oils_pool = present_fat_oils[~present_fat_oils['name'].isin(fat_oils_so_far_set)]
-                additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_fat_oils_pool['name']]
+                additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_fat_oils_pool['name']]
                 additional_fat_oils = additional_fat_oils_pool.sample(n_additional_non_clique_fat_oils, weights='neighbor_counts_xtreme')
                 selected_ingredients = selected_ingredients.append(additional_fat_oils)
 
             if n_additional_non_clique_other_flavorings > 0:
                 additional_other_flavorings_pool = present_other_flavorings[~present_other_flavorings['name'].isin(other_flavorings_so_far_set)]
-                additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_other_flavorings_pool['name']]
+                additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_other_flavorings_pool['name']]
                 additional_other_flavorings = additional_other_flavorings_pool.sample(n_additional_non_clique_other_flavorings, weights='neighbor_counts_xtreme')
                 selected_ingredients = selected_ingredients.append(additional_other_flavorings)
 
             if n_additional_non_clique_foodstuffs > 0:
                 additional_foodstuffs_pool = present_foodstuffs[~present_foodstuffs['name'].isin(foodstuffs_so_far_set)]
-                additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_foodstuffs_pool['name']]
+                additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_foodstuffs_pool['name']]
                 additional_foodstuffs = additional_foodstuffs_pool.sample(n_additional_non_clique_foodstuffs, weights='neighbor_counts_xtreme')
                 selected_ingredients = selected_ingredients.append(additional_foodstuffs)
 
@@ -942,7 +977,6 @@ def generate_stir_fry_black_magic():
                         # print('not in locked')
                         valid_neighbor_counts[neighbor] = valid_neighbor_counts.get(neighbor, 0) + 1
                 selected_ingredients = locked
-                print('valid neighbor counts', valid_neighbor_counts)
             elif len(present_other_flavorings) > 1 and len(present_foodstuffs) > 1:
                 seed = present_other_flavorings.append(present_foodstuffs).sample(1)
                 maybe_neighbors_so_far_list = seed['upper_names'].iloc[0]
@@ -964,24 +998,22 @@ def generate_stir_fry_black_magic():
                 continue
 
             selected_names_so_far = selected_ingredients['name'].tolist()
-            print('valid neighbor counts', valid_neighbor_counts)
-            print()
-
+            # print('valid neighbor counts', valid_neighbor_counts)
             if n_additional_salts_actual > 0:
                 additional_salts_pool = unlocked_salts[~unlocked_salts['name'].isin(selected_names_so_far)]
-                additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_salts_pool['name']]
+                additional_salts_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_salts_pool['name']]
                 selected_ingredients = selected_ingredients.append(additional_salts_pool.sample(n_additional_salts_actual, weights='neighbor_counts_xtreme'))
             if n_additional_fat_oils_actual > 0:
                 additional_fat_oils_pool = unlocked_fat_oils[~unlocked_fat_oils['name'].isin(selected_names_so_far)]
-                additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_fat_oils_pool['name']]
+                additional_fat_oils_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_fat_oils_pool['name']]
                 selected_ingredients = selected_ingredients.append(additional_fat_oils_pool.sample(n_additional_fat_oils_actual, weights='neighbor_counts_xtreme'))
             if n_additional_other_flavorings_actual > 0:
                 additional_other_flavorings_pool = unlocked_other_flavorings[~unlocked_other_flavorings['name'].isin(selected_names_so_far)]
-                additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_other_flavorings_pool['name']]
+                additional_other_flavorings_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_other_flavorings_pool['name']]
                 selected_ingredients = selected_ingredients.append(additional_other_flavorings_pool.sample(n_additional_other_flavorings_actual, weights='neighbor_counts_xtreme'))
             if n_additional_foodstuffs_actual > 0:
                 additional_foodstuffs_pool = unlocked_foodstuffs[~unlocked_foodstuffs['name'].isin(selected_names_so_far)]
-                additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .5)**2 for name in additional_foodstuffs_pool['name']]
+                additional_foodstuffs_pool['neighbor_counts_xtreme'] = [valid_neighbor_counts.get(name, .1)**2 for name in additional_foodstuffs_pool['name']]
                 selected_ingredients = selected_ingredients.append(additional_foodstuffs_pool.sample(n_additional_foodstuffs_actual, weights='neighbor_counts_xtreme'))
 
         selected_names = selected_ingredients['name'].tolist()
@@ -1038,16 +1070,18 @@ def generate_stir_fry_black_magic():
         # print('STRENGTH SCORE', strength_score)
         score += strength_score
 
-        # LOCKED BONUS =========================================================
-        locked_above_average = 0
-        for node_degree in node_degrees:
-            if node_degree[0] in locked_names:
-                # print(node_degree[1])
-                locked_above_average += node_degree[1] - average_degree
-        locked_score = locked_above_average * .2 + .5 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
-        # print('LOCKED SCORE', locked_score)
-        score += locked_score
-
+        if len(locked) > 0:
+            # LOCKED BONUS =========================================================
+            locked_above_average = 0
+            for node_degree in node_degrees:
+                if node_degree[0] in locked_names:
+                    # print(node_degree[1])
+                    locked_above_average += node_degree[1] - average_degree
+            locked_score = locked_above_average * .3 + 1 # close enough (has to cover few locked, lotta locked, small pool, big pool - yeesh.)
+            # print('LOCKED SCORE', locked_score)
+        else:
+            locked_score = 0
+        score += locked_score * 2
         # FLAVOR BALANCE BONUS =================================================
         # ranges from roughly (0 to 1) * 1 (could be a lil over/under)
         n_sweet_lower = (selected_ingredients['sweet'] == 'y').sum()
@@ -1083,17 +1117,46 @@ def generate_stir_fry_black_magic():
         # print('FLAVOR SCORE', flavor_score)
 
         # FOOD GROUPS BONUS ==========================================================================================
-        if 'y' in selected_ingredients['stir_fry_protein'].values:
-            protein_score = .5
-        else:
-            protein_score = 0
+        # if 'y' in selected_ingredients['stir_fry_protein'].values:
+        #     protein_score = .5
+        # else:
+        #     protein_score = 0
+        #
+        # if 'y' in selected_ingredients['stir_fry_fruit'].values:
+        #     fruit_score = .5
+        # else:
+        #     fruit_score = 0
+        #
+        # food_group_score = protein_score + fruit_score
+        n_protein = (selected_ingredients['stir_fry_protein'] == 'y').sum()
+        n_fruit = (selected_ingredients['stir_fry_fruit'] == 'y').sum()
+        n_grain = (selected_ingredients['stir_fry_grain'] == 'y').sum()
+        n_leafy = (selected_ingredients['veg_leafy'] == 'y').sum()
 
-        if 'y' in selected_ingredients['stir_fry_fruit'].values:
-            fruit_score = .5
-        else:
-            fruit_score = 0
+        food_group_score = .5
 
-        food_group_score = protein_score + fruit_score
+        if n_protein in range(1, 3):
+            food_group_score += .25
+        if n_protein == 3:
+            food_group_score -= .25
+        if n_protein > 3:
+            food_group_score -= .5
+
+        if n_fruit == 1:
+            food_group_score += .25
+        if n_fruit > 2:
+            food_group_score -= .5
+
+        if n_grain > 1:
+            food_group_score -= .25
+        if n_grain > 2:
+            food_group_score -= .5
+
+        if n_leafy > 1:
+            food_group_score -= .25
+        if n_leafy > 2:
+            food_group_score -= .5
+
         score += food_group_score
         # print('FOOD GROUP SCORE', food_group_score)
 
