@@ -387,9 +387,15 @@ var StirFryManager = function() {
             ingredient.locked = false;
         } else {
             ingredient.locked = true;
+            gtag('event', 'ingredient_lock', {
+                'event_category': 'ingredient',
+                'event_label': 'Lock Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
+
         }
-        ingredient.render()
-            self.saveProjectToLocalStorage('');
+        ingredient.render();
+        self.saveProjectToLocalStorage('');
     }
 
     self.network.on('doubleClick', function(properties) {
@@ -410,7 +416,7 @@ var StirFryManager = function() {
             ingredient.connected = true;
         }
         ingredient.render();
-            self.saveProjectToLocalStorage('');
+        self.saveProjectToLocalStorage('');
     }
 
     self.network.on('oncontext', function(properties) {
@@ -580,6 +586,12 @@ var StirFryManager = function() {
         if (projectName && projectName != '') {
             self.saveProjectToLocalStorage(projectName);
             console.log('SAVED');
+
+            gtag('event', 'project_save', {
+                'event_category': 'project',
+                'event_label': 'Save Stir-Fry: ' + projectName,
+                'non_interaction': true,
+            });
         }
     });
 
@@ -611,6 +623,12 @@ var StirFryManager = function() {
                 self.loadProjectFromLocalStorage(projectName);
                 console.log('LOADED');
                 self.saveProjectToLocalStorage('');
+
+                gtag('event', 'project_load', {
+                    'event_category': 'project',
+                    'event_label': 'Load Stir-Fry: ' + projectName,
+                    'non_interaction': true,
+                });
             }
         }
     });
@@ -648,6 +666,11 @@ var StirFryManager = function() {
     self.generate = function(method) {
         // console.log('GENERATING')
         if (!self.generating) {
+            gtag('event', 'generate_start', {
+                'event_category': 'generate',
+                'event_label': 'Start ' + method.toUpperCase() + ' Stir-Fry',
+                'non_interaction': true,
+            });
             // console.log('not already generating')
             self.generating = true;
             $('#generating').show();
@@ -717,20 +740,37 @@ var StirFryManager = function() {
                         $('#recipe').click();
                         self.saveToLocalStorage('reciped', true);
                     }
+
+                    gtag('event', 'generate_success', {
+                        'event_category': 'generate',
+                        'event_label': method.toUpperCase() + ' Stir-Fry Success',
+                        'non_interaction': true,
+                    });
                 } else if (json['outcome'] == 'failure') {
                     if (json['message']) {
                         alert(json['message']);
                     } else {
                         console.log('ERROR: received "failure" outcome but no message')
                     }
+
+                    gtag('event', 'generate_failure', {
+                        'event_category': 'generate',
+                        'event_label': method.toUpperCase() + ' Stir-Fry Failure',
+                        'non_interaction': true,
+                    });
                 } else {
                     console.log('ERROR: received outcome other than "success" or "failure"');
                 }
+                // gtag('event', 'generate_success', {
+                //
+                // })
+                // ga('send', 'event', 'generate', 'success', method);
             }).catch(function(error) {
                 console.log(error);
                 alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
                 $('#generating').hide();
                 self.generating = false;
+                // ga('send', 'event', 'generate', 'failure', method);
             });
         } else {
             console.log('Already generating.');
