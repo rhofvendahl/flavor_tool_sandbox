@@ -12,6 +12,7 @@ import networkx as nx
 import os
 import random
 import pickle
+import time
 
 root_path = os.getcwd()
 salad_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/salad_flavor_data.pickle'))
@@ -80,6 +81,7 @@ def generate_salad():
 
     scoring_method = 'tbd'
     top_score = None
+
     for iteration in range(n_iterations):
         # n_subgraphs = 2
         connection_attempt = 1
@@ -448,7 +450,15 @@ def generate_stir_fry():
 
     n_iterations = 175
     top_score = None
+
+    n = 0
+    start = time.time()
     for iteration in range(n_iterations):
+        if time.time() - start > 10:
+            print("OOPS! Time's up. " + str(n) + 'iterations completed.')
+            break
+        n += 1
+
         n_additional_other_flavorings_actual = random.randrange(n_additional_other_flavorings_actual_min, n_additional_other_flavorings_actual_max+1)
         n_additional_foodstuffs_actual = random.randrange(n_additional_foodstuffs_actual_min, n_additional_foodstuffs_actual_max+1)
 
@@ -890,7 +900,15 @@ def generate_stir_fry_black_magic():
 
     top_score = None
     n_iterations = 200
+
+    n = 0
+    start = time.time()
     for iteration in range(n_iterations):
+        if time.time() - start > 10:
+            print("OOPS! Time's up. " + str(n) + 'iterations completed.')
+            break
+        n += 1
+
         n_total_other_flavorings_actual = random.randrange(n_total_other_flavorings_actual_min, n_total_other_flavorings_actual_max+1)
         n_total_foodstuffs_actual = random.randrange(n_total_foodstuffs_actual_min, n_total_foodstuffs_actual_max+1)
 
