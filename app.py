@@ -454,8 +454,8 @@ def generate_stir_fry():
     n = 0
     start = time.time()
     for iteration in range(n_iterations):
-        if time.time() - start > 10:
-            print("OOPS! Time's up. " + str(n) + 'iterations completed.')
+        if time.time() - start > 15:
+            print("OOPS! Time's up. " + str(n) + ' iterations completed.')
             break
         n += 1
 
@@ -904,8 +904,8 @@ def generate_stir_fry_black_magic():
     n = 0
     start = time.time()
     for iteration in range(n_iterations):
-        if time.time() - start > 10:
-            print("OOPS! Time's up. " + str(n) + 'iterations completed.')
+        if time.time() - start > 15:
+            print("OOPS! Time's up. " + str(n) + ' iterations completed.')
             break
         n += 1
 
