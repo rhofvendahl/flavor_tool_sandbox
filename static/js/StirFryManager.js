@@ -254,6 +254,9 @@ var StirFryManager = function() {
     }
 
     self.load = function() {
+        console.log('showing loading')
+        $('#loading').show();
+
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
@@ -269,6 +272,8 @@ var StirFryManager = function() {
         }).then(function(response) {
             return response.json();
         }).then(function(ingredients) {
+            console.log('hiding loading')
+            $('#loading').hide();
             self.ingredients = []
             ingredients.forEach(function(ingredient) {
                 var stirFryIngredient = new StirFryIngredient(self, ingredient);
@@ -645,9 +650,14 @@ var StirFryManager = function() {
     });
 
     $('#about').click(function() {
-        $('#recipe-window').hide();
-        $('#about-window').show();
+        if ($('#about-window').is(':hidden')) {
+            $('#recipe-window').hide();
+            $('#about-window').show();
+        } else {
+            $('#about-window').hide();
+        }
     });
+
     $('#about-close').click(function() {
         $('#about-window').hide();
     });
@@ -809,84 +819,89 @@ var StirFryManager = function() {
     });
 
     $('#recipe').click(function() {
-        var earlyNames = [];
-        var earlyMidNames = [];
-        var earlyMidLateNames = [];
-        var midNames = [];
-        var midLateNames = [];
-        var midLateFlavoringNames = [];
-        var lateNames = [];
-        var lateFlavoringNames = [];
-        var flavoringNames = [];
+        if ($('#recipe-window').is(':hidden')) {
+            var earlyNames = [];
+            var earlyMidNames = [];
+            var earlyMidLateNames = [];
+            var midNames = [];
+            var midLateNames = [];
+            var midLateFlavoringNames = [];
+            var lateNames = [];
+            var lateFlavoringNames = [];
+            var flavoringNames = [];
 
-        self.getSelectedSet().forEach(function(ingredient) {
-            if (ingredient.data.stir_fry_early == 'y') {
-                if (ingredient.data.stir_fry_mid == 'y') {
+            self.getSelectedSet().forEach(function(ingredient) {
+                if (ingredient.data.stir_fry_early == 'y') {
+                    if (ingredient.data.stir_fry_mid == 'y') {
+                        if (ingredient.data.stir_fry_late == 'y') {
+                            earlyMidLateNames.push(ingredient.name);
+                        } else {
+                            earlyMidNames.push(ingredient.name);
+                        }
+                    } else {
+                        earlyNames.push(ingredient.name);
+                    }
+                } else if (ingredient.data.stir_fry_mid == 'y') {
                     if (ingredient.data.stir_fry_late == 'y') {
-                        earlyMidLateNames.push(ingredient.name);
+                        if (ingredient.data.stiri_fry_garnish == 'y') {
+                            midLateFlavoringNames.push(ingredient.name);
+                        } else {
+                                midLateNames.push(ingredient.name);
+                        }
                     } else {
-                        earlyMidNames.push(ingredient.name);
+                        midNames.push(ingredient.name);
                     }
-                } else {
-                    earlyNames.push(ingredient.name);
-                }
-            } else if (ingredient.data.stir_fry_mid == 'y') {
-                if (ingredient.data.stir_fry_late == 'y') {
-                    if (ingredient.data.stiri_fry_garnish == 'y') {
-                        midLateFlavoringNames.push(ingredient.name);
+                } else if (ingredient.data.stir_fry_late == 'y') {
+                    if (ingredient.data.stir_fry_garnish == 'y') {
+                        lateFlavoringNames.push(ingredient.name);
                     } else {
-                            midLateNames.push(ingredient.name);
+                        lateNames.push(ingredient.name);
                     }
-                } else {
-                    midNames.push(ingredient.name);
+                } else if (ingredient.data.stir_fry_garnish == 'y') {
+                    flavoringNames.push(ingredient.name);
                 }
-            } else if (ingredient.data.stir_fry_late == 'y') {
-                if (ingredient.data.stir_fry_garnish == 'y') {
-                    lateFlavoringNames.push(ingredient.name);
-                } else {
-                    lateNames.push(ingredient.name);
-                }
-            } else if (ingredient.data.stir_fry_garnish == 'y') {
-                flavoringNames.push(ingredient.name);
+            });
+
+            var html = '';
+            if (Array.from(self.getSelectedSet()).length > 1) {
+                earlyNames.forEach(function(name) {
+                    html += '<li>[early] <strong>' + name + '</strong></li>';
+                });
+                earlyMidNames.forEach(function(name) {
+                    html += '<li>[early or mid] <strong>' + name + '</strong></li>';
+                });
+                earlyMidLateNames.forEach(function(name) {
+                    html += '<li>[early or mid or late] <strong>' + name + '</strong></li>';
+                });
+                midNames.forEach(function(name) {
+                    html += '<li>[mid] <strong>' + name + '</strong></li>';
+                });
+                midLateNames.forEach(function(name) {
+                    html += '<li>[mid or late] <strong>' + name + '</strong></li>';
+                });
+                midLateFlavoringNames.forEach(function(name) {
+                    html += '<li>[mid or late or flavoring] <strong>' + name + '</strong></li>';
+                });
+                lateNames.forEach(function(name) {
+                    html += '<li>[late] <strong>' + name + '</strong></li>';
+                });
+                lateFlavoringNames.forEach(function(name) {
+                    html += '<li>[late or flavoring] <strong>' + name + '</strong></li>';
+                });
+                flavoringNames.forEach(function(name) {
+                    html += '<li>[flavoring] <strong>' + name + '</strong></li>';
+                });
+            } else {
+                html += '<li>You haven\'t selected any ingredients! This won\'nt be much of a stir fry, will it?</li>'
             }
-        });
 
-        var html = '';
-        if (Array.from(self.getSelectedSet()).length > 1) {
-            earlyNames.forEach(function(name) {
-                html += '<li>[early] <strong>' + name + '</strong></li>';
-            });
-            earlyMidNames.forEach(function(name) {
-                html += '<li>[early or mid] <strong>' + name + '</strong></li>';
-            });
-            earlyMidLateNames.forEach(function(name) {
-                html += '<li>[early or mid or late] <strong>' + name + '</strong></li>';
-            });
-            midNames.forEach(function(name) {
-                html += '<li>[mid] <strong>' + name + '</strong></li>';
-            });
-            midLateNames.forEach(function(name) {
-                html += '<li>[mid or late] <strong>' + name + '</strong></li>';
-            });
-            midLateFlavoringNames.forEach(function(name) {
-                html += '<li>[mid or late or flavoring] <strong>' + name + '</strong></li>';
-            });
-            lateNames.forEach(function(name) {
-                html += '<li>[late] <strong>' + name + '</strong></li>';
-            });
-            lateFlavoringNames.forEach(function(name) {
-                html += '<li>[late or flavoring] <strong>' + name + '</strong></li>';
-            });
-            flavoringNames.forEach(function(name) {
-                html += '<li>[flavoring] <strong>' + name + '</strong></li>';
-            });
+            $('#ingredients-list').html(html);
+            $('#about-window').hide();
+            $('#recipe-window').show();
         } else {
-            html += '<li>You haven\'t selected any ingredients! This won\'nt be much of a stir fry, will it?</li>'
+            $('#recipe-window').hide();
+            $('#ingredients-list').html('')
         }
-
-        $('#ingredients-list').html(html);
-        $('#about-window').hide();
-        $('#recipe-window').show();
     });
 
     $('#recipe-close').click(function() {

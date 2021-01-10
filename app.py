@@ -709,8 +709,9 @@ def get_weak_score(strong):
 # ALTERS SHARED DATA
 stir_fry_flavor_data['weak_score'] = stir_fry_flavor_data['strong'].apply(get_weak_score)
 
-with open(os.path.join(root_path, 'data/stir_fry_shortest_path_lengths.pickle'), 'rb') as handle:
-    stir_fry_shortest_path_lengths = pickle.load(handle)
+# not used?
+# with open(os.path.join(root_path, 'data/stir_fry_shortest_path_lengths.pickle'), 'rb') as handle:
+#     stir_fry_shortest_path_lengths = pickle.load(handle)
 
 def get_sort_key(length_tuple):
     return length_tuple[1]
