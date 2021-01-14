@@ -1,5 +1,5 @@
-from __main__ import app
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Blueprint
+salad_blueprint  = Blueprint('salad_blueprint', __name__, template_folder='templates')
 
 import pandas as pd
 import networkx as nx
@@ -12,16 +12,11 @@ root_path = os.getcwd()
 salad_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/salad_flavor_data.pickle'))
 # stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_flavor_data.pickle'))
 
-@app.route('/')
-def root():
-    print(request.url)
-    return redirect(url_for('stir_fry_index'))
-
-@app.route('/salad')
+@salad_blueprint.route('/salad')
 def salad_index():
     return render_template('salad-index.html')
 
-@app.route('/get-salad-ingredients', methods=['GET'])
+@salad_blueprint.route('/get-salad-ingredients', methods=['GET'])
 def get_salad_ingredients():
     salad_ingredients = [
         {
@@ -31,7 +26,7 @@ def get_salad_ingredients():
     # print(salad_flavor_data.columns.tolist())
     return jsonify(salad_ingredients)
 
-@app.route('/generate-salad', methods=['POST'])
+@salad_blueprint.route('/generate-salad', methods=['POST'])
 def generate_salad():
     # print('GENERATING SALAD')
     content = request.get_json()

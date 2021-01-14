@@ -1,5 +1,9 @@
-from __main__ import app
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+# print(__main__)
+
+# from __main__ import app
+
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Blueprint
+stir_fry_blueprint  = Blueprint('stir_fry_blueprint', __name__, template_folder='templates')
 
 import pandas as pd
 import networkx as nx
@@ -11,11 +15,11 @@ import time
 root_path = os.getcwd()
 stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_flavor_data_with_umbrella.pickle'))
 
-@app.route('/stir-fry')
+@stir_fry_blueprint.route('/stir-fry')
 def stir_fry_index():
     return render_template('stir-fry-index.html')
 
-@app.route('/get-stir-fry-ingredients', methods=['GET'])
+@stir_fry_blueprint.route('/get-stir-fry-ingredients', methods=['GET'])
 def get_stir_fry_ingredients():
     stir_fry_ingredients = [
         {
@@ -24,7 +28,7 @@ def get_stir_fry_ingredients():
     for i, row in stir_fry_flavor_data.iterrows()]
     return jsonify(stir_fry_ingredients)
 
-@app.route('/generate-stir-fry', methods=['POST'])
+@stir_fry_blueprint.route('/generate-stir-fry', methods=['POST'])
 def generate_stir_fry():
     n_salts = 1
     n_fat_oils = 1
@@ -376,7 +380,7 @@ def get_first_name_in_set(sorted_tuples, food_set):
         if sorted_tuple[0] in food_set:
             return sorted_tuple[0]
 
-@app.route('/generate-stir-fry-black-magic', methods=['POST'])
+@stir_fry_blueprint.route('/generate-stir-fry-black-magic', methods=['POST'])
 def generate_stir_fry_black_magic():
     n_salts = 1
     n_fat_oils = 1
