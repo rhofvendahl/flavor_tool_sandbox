@@ -3,20 +3,20 @@
 <head>
     <title>Flavor Tool</title>
     
-    <link rel='stylesheet' href='static/css/lib/selectivity-jquery.min.css' type='text/css'>
+    <link rel='stylesheet' href='{{ url_for('static', filename='css/lib/selectivity-jquery.min.css') }}' type='text/css'>
     <link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css' type='text/css'>
     <link href='//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css' rel='stylesheet'>
-    <link href='static/css/lib/vis-network.min.css' rel='stylesheet' type='text/css' />
-    <link href='static/css/salad-style.css' rel='stylesheet' type='text/css' />
-    <link rel='shortcut icon' href='static/img/favicon.ico'>
+    <link href='{{ url_for('static', filename='css/lib/vis-network.min.css') }}' rel='stylesheet' type='text/css' />
+    <link href='{{ url_for('salad.static', filename='css/style.css') }}' rel='stylesheet' type='text/css' />
+    <link rel='shortcut icon' href='{{ url_for('static', filename='img/favicon.ico') }}'>
 
     <script type='text/javascript' src='//code.jquery.com/jquery-3.2.1.min.js'></script>
     <script type='text/javascript' src='//stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js'></script>
-    <script type='text/javascript' src='static/js/lib/vis-network.min.js'></script>
-    <script type='text/javascript' src='static/js/lib/selectivity-jquery.min.js'></script>
-    <script type='text/javascript' src='static/js/SaladIngredient.js'></script>
-    <script type='text/javascript' src='static/js/SaladManager.js'></script>
-    <script type='text/javascript' src='static/js/salad-main.js'></script>
+    <script type='text/javascript' src='{{ url_for('static', filename='js/lib/vis-network.min.js') }}'></script>
+    <script type='text/javascript' src='{{ url_for('static', filename='js/lib/selectivity-jquery.min.js') }}'></script>
+    <script type='text/javascript' src='{{ url_for('salad.static', filename='js/SaladIngredient.js') }}'></script>
+    <script type='text/javascript' src='{{ url_for('salad.static', filename='js/SaladManager.js') }}'></script>
+    <script type='text/javascript' src='{{ url_for('salad.static', filename='js/main.js') }}'></script>
 </head>
 
 <body>

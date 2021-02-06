@@ -1,5 +1,7 @@
+# TODO resolve "clashing" thing
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for, Blueprint
-salad_blueprint  = Blueprint('salad_blueprint', __name__, template_folder='templates')
+blueprint  = Blueprint('salad', __name__, url_prefix='/salad', template_folder='templates', static_folder='static/salad')
 
 import pandas as pd
 import networkx as nx
@@ -10,14 +12,13 @@ import time
 
 root_path = os.getcwd()
 salad_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/salad_flavor_data.pickle'))
-# stir_fry_flavor_data = pd.read_pickle(os.path.join(root_path, 'data/stir_fry_flavor_data.pickle'))
 
-@salad_blueprint.route('/salad')
-def salad_index():
-    return render_template('salad-index.html')
+@blueprint.route('/')
+def index():
+    return render_template('salad/index.html')
 
-@salad_blueprint.route('/get-salad-ingredients', methods=['GET'])
-def get_salad_ingredients():
+@blueprint.route('/get-ingredients', methods=['GET'])
+def get_ingredients():
     salad_ingredients = [
         {
             col_name: row[col_name]
@@ -26,8 +27,8 @@ def get_salad_ingredients():
     # print(salad_flavor_data.columns.tolist())
     return jsonify(salad_ingredients)
 
-@salad_blueprint.route('/generate-salad', methods=['POST'])
-def generate_salad():
+@blueprint.route('/generate', methods=['POST'])
+def generate():
     # print('GENERATING SALAD')
     content = request.get_json()
     locked_names = content['locked']

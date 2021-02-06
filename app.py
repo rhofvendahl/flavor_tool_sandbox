@@ -1,15 +1,31 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from salad.salad import salad_blueprint
-from stir_fry.stir_fry import stir_fry_blueprint
+# TODO resolve "clashing" thing in salad
 
-app = Flask(__name__)
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+import salad.routes
+import stir_fry.routes
+
+# Importing these adds to main "routes". An alternative would be importing in __init__.py.
+import stir_fry.routes_generate_fun
+import stir_fry.routes_generate_reliable
+
+app = Flask(
+    __name__,
+    # static_folder='static',
+    # static_url_path='/static'
+)
 # app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.register_blueprint(salad_blueprint)
-app.register_blueprint(stir_fry_blueprint)
+app.register_blueprint(salad.routes.blueprint)
+app.register_blueprint(stir_fry.routes.blueprint)
+# app.register_blueprint(stir_fry.routes_generate.blueprint)
+# app.register_blueprint(stir_fry.routes_generate_black_magic.blueprint)
+
+print(salad.routes.blueprint.__dict__)
+print()
+print(stir_fry.routes.blueprint.__dict__)
 
 @app.route('/')
 def root():
-    return redirect(url_for('stir_fry_blueprint.stir_fry_index'))
+    return redirect(url_for('stir_fry.index'))
 
 @app.before_request
 def force_https():

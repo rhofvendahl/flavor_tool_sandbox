@@ -1,4 +1,4 @@
-var SaladManager = function() {
+var StirFryManager = function() {
     var self = this;
 
     self.nodes = new vis.DataSet();
@@ -10,19 +10,33 @@ var SaladManager = function() {
         nodes: {
             borderWidthSelected: 2,
             font: {
-                size: 12
+                size: 12,
             },
-            title: ''
+            title: '',
+            shapeProperties: {
+                interpolation: false, // should be unnecessary, but might help with leak
+            },
         },
         physics: {
-            maxVelocity: 5
+            // maxVelocity: 20,
+            timestep: .25,
+            barnesHut: {
+              gravitationalConstant: -3000,
+              centralGravity: 0.2,
+              springLength: 150,
+              springConstant: 0.03,
+            },
         },
         interaction: {
-            tooltipDelay: 1200
+            tooltipDelay: 1200,
         },
         edges: {
-            chosen: false
-        }
+            chosen: false,
+            smooth: {
+                type: 'continuous',
+            },
+            // length: 200,
+        },
     };
     self.network = new vis.Network(container, data, options);
 
@@ -143,7 +157,7 @@ var SaladManager = function() {
     }
 
     self.existsInLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
+        var varJson = localStorage['stir_fry_' + varName];
         if (varJson) {
             return true;
         } else {
@@ -152,7 +166,7 @@ var SaladManager = function() {
     }
 
     self.getFromLocalStorage = function(varName) {
-        var varJson = localStorage['salad_' + varName];
+        var varJson = localStorage['stir_fry_' + varName];
         if (varJson) { // since I want this to execute if varJson is truthy
             return JSON.parse(varJson);
         } else {
@@ -161,7 +175,7 @@ var SaladManager = function() {
     }
 
     self.saveToLocalStorage = function(varName, varContent) {
-        localStorage['salad_' + varName] = JSON.stringify(varContent);
+        localStorage['stir_fry_' + varName] = JSON.stringify(varContent);
     }
 
     self.saveProjectToLocalStorage = function(projectName) {
@@ -173,7 +187,6 @@ var SaladManager = function() {
                 lockedArray: self.getLockedNames(),
                 connectedArray: self.getConnectedNames()
             };
-
             self.saveToLocalStorage(projectName, data);
 
             var projectNamesSet;
@@ -182,7 +195,7 @@ var SaladManager = function() {
             } else {
                 projectNamesSet = new Set([]);
             }
-            projectNamesSet.add('salad_' + projectName);
+            projectNamesSet.add('stir_fry_' + projectName);
             self.saveToLocalStorage('projectNames', Array.from(projectNamesSet));
         }
     }
@@ -233,7 +246,6 @@ var SaladManager = function() {
         });
         var highlightedNames = self.getHighlightedNames();
         if (highlightedNames.length > 0) {
-            console.log(self.nodes.getIds()[0])
             self.network.fit({
                 nodes: highlightedNames,
                 animation: true
@@ -242,12 +254,15 @@ var SaladManager = function() {
     }
 
     self.load = function() {
+        console.log('showing loading')
+        $('#loading').show();
+
         if (!self.existsInLocalStorage('abouted') || self.getFromLocalStorage('abouted') == false) {
             console.log('Showing "About" to first time visitors!');
             $('#about-window').show();
             self.saveToLocalStorage('abouted', true);
         }
-        fetch('/get-salad-ingredients', {
+        fetch('/stir-fry/get-ingredients', {
             method: 'get'
         }).then(function(response) {
             if (!response.ok) {
@@ -257,10 +272,12 @@ var SaladManager = function() {
         }).then(function(response) {
             return response.json();
         }).then(function(ingredients) {
+            console.log('hiding loading')
+            $('#loading').hide();
             self.ingredients = []
             ingredients.forEach(function(ingredient) {
-                var saladIngredient = new SaladIngredient(self, ingredient);
-                self.ingredients.push(saladIngredient);
+                var stirFryIngredient = new StirFryIngredient(self, ingredient);
+                self.ingredients.push(stirFryIngredient);
             });
 
             $('#present').selectivity({
@@ -277,7 +294,7 @@ var SaladManager = function() {
 
                 if (event.added && typeof(event.added) == 'object') {
                     var ingredient = self.getFromName(event.added.id);
-                    ingredient.add();
+                    ingredient.present = true;
                     ingredient.render();
                 } else if (event.removed && typeof(event.removed) == 'object') {
                     var ingredient = self.getFromName(event.removed.id);
@@ -315,10 +332,18 @@ var SaladManager = function() {
                     ingredient.add();
                 });
             }
+
+            setTimeout(function() {
+                self.network.fit({
+                    nodes: self.getSelectedNames(),
+                    animation: true,
+                });
+            }, 2600);
         }).catch(function(error) {
             console.log(error);
         });
     };
+
 
     self.clickTimeout = null;
 
@@ -330,10 +355,20 @@ var SaladManager = function() {
             ingredient.selected = false;
         } else {
             ingredient.selected = true;
+            gtag('event', 'ingredient_select', {
+                'event_category': 'ingredient',
+                'event_label': 'Select Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
         }
         ingredient.render();
         self.saveProjectToLocalStorage('');
     }
+
+    self.network.on('hold', function() {
+        clearTimeout(self.clickTimeout);
+        self.clickTimeout = null;
+    });
 
     self.network.on('click', function(properties) {
         $('#present').selectivity('close');
@@ -362,9 +397,14 @@ var SaladManager = function() {
             ingredient.locked = false;
         } else {
             ingredient.locked = true;
+            gtag('event', 'ingredient_lock', {
+                'event_category': 'ingredient',
+                'event_label': 'Lock Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
         }
-        ingredient.render()
-            self.saveProjectToLocalStorage('');
+        ingredient.render();
+        self.saveProjectToLocalStorage('');
     }
 
     self.network.on('doubleClick', function(properties) {
@@ -383,9 +423,14 @@ var SaladManager = function() {
             ingredient.connected = false;
         } else {
             ingredient.connected = true;
+            gtag('event', 'ingredient_connect', {
+                'event_category': 'ingredient',
+                'event_label': 'Connect Ingredient: ' + ingredient.name,
+                'non_interaction': true,
+            });
         }
         ingredient.render();
-            self.saveProjectToLocalStorage('');
+        self.saveProjectToLocalStorage('');
     }
 
     self.network.on('oncontext', function(properties) {
@@ -473,6 +518,12 @@ var SaladManager = function() {
         $('#menu-wrapper').show();
         self.network.selectNodes([menuId]);
         self.getFromName(self.menuId).render();
+
+        self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
+            self.endMenu();
+            clearTimeout(self.endMenuTimeout); // just to be safe
+            self.endMenuTimeout = null;
+        }, 5000); // how long it takes menu to disappear
     }
 
     self.endMenu = function() {
@@ -512,8 +563,10 @@ var SaladManager = function() {
     self.network.on('hidePopup', function() {
         if (self.mouseOnNode) {
             self.mouseOnNode = false;
+            clearTimeout(self.endMenuTimeout);
             self.endMenuTimeout = setTimeout(function() { // should be cleared and set to null at this time
                 self.endMenu();
+                clearTimeout(self.endMenuTimeout); // just to be safe
                 self.endMenuTimeout = null;
             }, 300); // how long it takes menu to disappear
         }
@@ -533,7 +586,7 @@ var SaladManager = function() {
         if (self.existsInLocalStorage('projectNames')) {
             message += 'Saved projects:\n';
             self.getFromLocalStorage('projectNames').forEach(function(name) {
-                name = name.split('salad_').slice(1).join('');
+                name = name.split('stir_fry_').slice(1).join('');
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -547,6 +600,13 @@ var SaladManager = function() {
         if (projectName && projectName != '') {
             self.saveProjectToLocalStorage(projectName);
             console.log('SAVED');
+
+            var selectedNamesString = self.getSelectedNames().join(' + ');
+            gtag('event', 'project_save', {
+                'event_category': 'project',
+                'event_label': 'Save Stir-Fry ' + projectName + ': ' + selectedNamesString,
+                'non_interaction': true,
+            });
         }
     });
 
@@ -557,7 +617,7 @@ var SaladManager = function() {
             projectNames = self.getFromLocalStorage('projectNames');
             message += 'Saved projects:\n';
             self.getFromLocalStorage('projectNames').forEach(function(name) {
-                name = name.split('salad_').slice(1).join('');
+                name = name.split('stir_fry_').slice(1).join('');
                 if (name != '') {
                     message += name + '\n';
                 }
@@ -572,21 +632,32 @@ var SaladManager = function() {
 
         if (projectName && projectName != '') {
             var projectNameSet = new Set(projectNames);
-            if (!projectNameSet.has('salad_'+projectName)) {
+            if (!projectNameSet.has('stir_fry_'+projectName)) {
                 alert('Project not found, please try again.')
             } else {
                 self.loadProjectFromLocalStorage(projectName);
                 console.log('LOADED');
                 self.saveProjectToLocalStorage('');
+
+                var selectedNamesString = self.getSelectedNames().join(' + ');
+                gtag('event', 'project_load', {
+                    'event_category': 'project',
+                    'event_label': 'Load Stir-Fry ' + projectName + ': ' + selectedNamesString,
+                    'non_interaction': true,
+                });
             }
         }
     });
 
-    // $('#about-window').hide();
     $('#about').click(function() {
-        $('#recipe-window').hide();
-        $('#about-window').show();
+        if ($('#about-window').is(':hidden')) {
+            $('#recipe-window').hide();
+            $('#about-window').show();
+        } else {
+            $('#about-window').hide();
+        }
     });
+
     $('#about-close').click(function() {
         $('#about-window').hide();
     });
@@ -596,7 +667,6 @@ var SaladManager = function() {
         if (confirmation == 'y') {
             self.ingredients.forEach(function(ingredient) {
                 ingredient.add();
-                // ingredient.render();
             });
             self.saveProjectToLocalStorage('');
         }
@@ -613,84 +683,127 @@ var SaladManager = function() {
     });
 
     self.generating = false;
+    self.default_method = 'reliable';
+    self.generate = function(method) {
+        // console.log('GENERATING')
+        if (!self.generating) {
+            gtag('event', 'generate_start', {
+                'event_category': 'generate',
+                'event_label': 'Start ' + method.toUpperCase() + ' Stir-Fry',
+                'non_interaction': true,
+            });
+            // console.log('not already generating')
+            self.generating = true;
+            $('#generating').show();
+            self.default_method = method;
+            url = (method == 'fun') ? '/stir-fry/generate-fun' : '/stir-fry/generate-reliable';
+            fetch(url, {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    present: self.getPresentNames(),
+                    locked: self.getLockedNames()
+                })
+            }).then(function(response) {
+                // console.log('dealing with response errors')
+                if (!response.ok) {
+                    throw Error(response.statusText);
+                }
+                return response;
+            }).then(function(response) {
+                // console.log('dealing with response')
+                return response.json();
+            }).then(function(json) {
+                $('#generating').hide();
+                self.generating = false;
 
+                if (json['outcome'] == 'success') {
+                    // console.log('dealing with json')
+                    var presentNames = json['data']['present_names'];
+                    var selectedNames = json['data']['selected_names'];
+                    var lockedNames = json['data']['locked_names'];
+                    var generatedNames = json['data']['generated_names'];
 
-    self.generate = function() {
-        alert('The salad generator is out of service.');
+                    var presentNamesSet = new Set(presentNames);
+                    var selectedNamesSet = new Set(selectedNames);
+                    var lockedNamesSet = new Set(lockedNames);
+                    var generatedNamesset = new Set(generatedNames);
+
+                    self.ingredients.forEach(function(ingredient) {
+                        if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
+                            ingredient.add({
+                                selected: selectedNamesSet.has(ingredient.name),
+                                locked: lockedNamesSet.has(ingredient.name),
+                                connected: false
+                            });
+                            // self.getPresentSet().add(ingredient);
+                        } // no else clause, as I don't want to remove any ingredients added since the request was sent
+                        ingredient.selected = selectedNamesSet.has(ingredient.name);
+                        ingredient.locked = lockedNamesSet.has(ingredient.name);
+                        ingredient.render();
+                    });
+
+                    self.saveProjectToLocalStorage('');
+
+                    setTimeout(function() {
+                        self.network.fit({
+                            nodes: selectedNames,
+                            animation: true
+                        });
+                    }, 2200);
+
+                    if (!self.existsInLocalStorage('reciped') || self.getFromLocalStorage('reciped') == false) {
+                        console.log('Showing "Recipe" to first time generators!');
+                        $('#about-window').show();
+                        $('#recipe').click();
+                        self.saveToLocalStorage('reciped', true);
+                    }
+
+                    gtag('event', 'generate_success', {
+                        'event_category': 'generate',
+                        'event_label': method.toUpperCase() + ' Stir-Fry Success',
+                        'non_interaction': true,
+                    });
+                } else if (json['outcome'] == 'failure') {
+                    if (json['message']) {
+                        alert(json['message']);
+                    } else {
+                        console.log('ERROR: received "failure" outcome but no message')
+                    }
+
+                    gtag('event', 'generate_failure', {
+                        'event_category': 'generate',
+                        'event_label': method.toUpperCase() + ' Stir-Fry Failure',
+                        'non_interaction': true,
+                    });
+                } else {
+                    console.log('ERROR: received outcome other than "success" or "failure"');
+                }
+                // gtag('event', 'generate_success', {
+                //
+                // })
+                // ga('send', 'event', 'generate', 'success', method);
+            }).catch(function(error) {
+                console.log(error);
+                alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
+                $('#generating').hide();
+                self.generating = false;
+                // ga('send', 'event', 'generate', 'failure', method);
+            });
+        } else {
+            console.log('Already generating.');
+        }
     }
 
-    // self.generate = function() {
-    //     if (!self.generating) {
-    //         self.generating = true;
-    //         $('#generating').show();
-    //         console.log('about to fetch')
-    //         fetch('/generate-salad', {
-    //             method: 'post',
-    //             headers: {
-    //                 'Accept': 'application/json',
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({
-    //                 // present: self.getNamesFromSet(self.presentSet),
-    //                 // locked: self.getNamesFromSet(self.lockedSet)
-    //                 present: self.getPresentNames(),
-    //                 locked: self.getLockedNames()
-    //             })
-    //         }).then(function(response) {
-    //             if (!response.ok) {
-    //                 throw Error(response.statusText);
-    //             }
-    //             return response;
-    //         }).then(function(response) {
-    //             return response.json();
-    //         }).then(function(json) {
-    //             var presentNames = json['present_names'];
-    //             var selectedNames = json['selected_names'];
-    //             var lockedNames = json['locked_names'];
-    //             var generatedNames = json['generated_names'];
-    //
-    //             var presentNamesSet = new Set(presentNames);
-    //             var selectedNamesSet = new Set(selectedNames);
-    //             var lockedNamesSet = new Set(lockedNames);
-    //             var generatedNamesset = new Set(generatedNames);
-    //
-    //             self.ingredients.forEach(function(ingredient) {
-    //                 if (presentNamesSet.has(ingredient.name) && !ingredient.present) {
-    //                     ingredient.add({
-    //                         selected: selectedNamesSet.has(ingredient.name),
-    //                         locked: lockedNamesSet.has(ingredient.name),
-    //                         connected: false
-    //                     });
-    //                     // self.getPresentSet().add(ingredient);
-    //                 } // no else clause, as I don't want to remove any ingredients added since the request was sent
-    //                 ingredient.selected = selectedNamesSet.has(ingredient.name);
-    //                 ingredient.locked = lockedNamesSet.has(ingredient.name);
-    //                 ingredient.render();
-    //             });
-    //
-    //             $('#generating').hide();
-    //             self.generating = false;
-    //             self.saveProjectToLocalStorage('');
-    //
-    //             setTimeout(function() {
-    //                 self.network.fit({
-    //                     nodes: selectedNames,
-    //                     animation: true
-    //                 });
-    //             }, 2000);
-    //         }).catch(function(error) {
-    //             console.log(error);
-    //             alert('Sorry, that didn\'t work. Please try re-loading or waiting for a bit.');
-    //             $('#generating').hide();
-    //             self.generating = false;
-    //         });
-    //     } else {
-    //         console.log('Already generating.')
-    //     }
-    // }
+    $('#generate-fun').click(function() {
+        self.generate('fun');
+    });
 
-    $('#generate').click(function() {
-        self.generate();
+    $('#generate-reliable').click(function() {
+        self.generate('reliable');
     });
 
     $('body').keydown(function(event){
@@ -701,107 +814,94 @@ var SaladManager = function() {
         if (spacebar && (!searching || emptySearch)) {
             $('#present').selectivity('close');
             activeElement.blur()
-            self.generate();
+            self.generate(self.default_method);
         }
     });
 
     $('#recipe').click(function() {
-        var leafyGreenNames = [];
-        var extraNames = [];
-        var extraVegNames = [];
-        var extraFruitNames = [];
-        var extraNutSeedNames = [];
-        var extraOtherNames = [];
-        var dressingNames = [];
-        var dressingOilNames = [];
-        var dressingVinegarNames = [];
-        var dressingSaltNames = [];
-        var dressingPepperNames = [];
+        if ($('#recipe-window').is(':hidden')) {
+            var earlyNames = [];
+            var earlyMidNames = [];
+            var earlyMidLateNames = [];
+            var midNames = [];
+            var midLateNames = [];
+            var midLateFlavoringNames = [];
+            var lateNames = [];
+            var lateFlavoringNames = [];
+            var flavoringNames = [];
 
-        self.getSelectedSet().forEach(function(ingredient) {
-            if (ingredient.data.salad_green == 'y') {
-                leafyGreenNames.push(ingredient.name);
-            } else if (ingredient.data.salad_extra == 'y') {
-                extraNames.push(ingredient.name);
-                if (ingredient.data.salad_extra_veg == 'y') {
-                    extraVegNames.push(ingredient.name);
-                } else if (ingredient.data.salad_extra_fruit == 'y') {
-                    extraFruitNames.push(ingredient.name);
-                } else if (ingredient.data.salad_extra_nut_seed == 'y') {
-                    extraNutSeedNames.push(ingredient.name);
-                } else {
-                    extraOtherNames.push(ingredient.name);
+            self.getSelectedSet().forEach(function(ingredient) {
+                if (ingredient.data.stir_fry_early == 'y') {
+                    if (ingredient.data.stir_fry_mid == 'y') {
+                        if (ingredient.data.stir_fry_late == 'y') {
+                            earlyMidLateNames.push(ingredient.name);
+                        } else {
+                            earlyMidNames.push(ingredient.name);
+                        }
+                    } else {
+                        earlyNames.push(ingredient.name);
+                    }
+                } else if (ingredient.data.stir_fry_mid == 'y') {
+                    if (ingredient.data.stir_fry_late == 'y') {
+                        if (ingredient.data.stiri_fry_garnish == 'y') {
+                            midLateFlavoringNames.push(ingredient.name);
+                        } else {
+                                midLateNames.push(ingredient.name);
+                        }
+                    } else {
+                        midNames.push(ingredient.name);
+                    }
+                } else if (ingredient.data.stir_fry_late == 'y') {
+                    if (ingredient.data.stir_fry_garnish == 'y') {
+                        lateFlavoringNames.push(ingredient.name);
+                    } else {
+                        lateNames.push(ingredient.name);
+                    }
+                } else if (ingredient.data.stir_fry_garnish == 'y') {
+                    flavoringNames.push(ingredient.name);
                 }
-            } else if (ingredient.data.salad_dressing == 'y') {
-                dressingNames.push(ingredient.name);
-                if (ingredient.data.salad_dressing_oil == 'y') {
-                    dressingOilNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_vinegar == 'y') {
-                    dressingVinegarNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_salt == 'y') {
-                    dressingSaltNames.push(ingredient.name);
-                } else if (ingredient.data.salad_dressing_pepper == 'y') {
-                    dressingPepperNames.push(ingredient.name);
-                }
-            }
-        });
-        var leafyGreensHtml = '<li>Leafy greens</li><ul>';
-        if (leafyGreenNames.length > 0) {
-            leafyGreenNames.forEach(function(name) {
-                leafyGreensHtml += '<li>' + name + '</li>';
             });
-        } else {
-            leafyGreensHtml += '<li>Oh no! You haven\'nt selected any leafy greens. You\'ll need to go back and add some before you can make a tasty salad.</li>';
-        }
-        leafyGreensHtml += '</ul>'
 
-        var extrasHtml = '<li>Extras</li><ul>';
-        if (extraNames.length > 0) {
-            extraNames.forEach(function(name) {
-                extrasHtml += '<li>' + name + '</li>';
-            });
-        } else {
-            extrasHtml += '<li>You haven\'nt selected any salad extras. You\'ll probably want to go back and add some, or your salad might not be very interesting.</li>';
-        }
-        extrasHtml += '</ul>'
+            var html = '';
+            if (Array.from(self.getSelectedSet()).length > 1) {
+                earlyNames.forEach(function(name) {
+                    html += '<li>[early] <strong>' + name + '</strong></li>';
+                });
+                earlyMidNames.forEach(function(name) {
+                    html += '<li>[early or mid] <strong>' + name + '</strong></li>';
+                });
+                earlyMidLateNames.forEach(function(name) {
+                    html += '<li>[early or mid or late] <strong>' + name + '</strong></li>';
+                });
+                midNames.forEach(function(name) {
+                    html += '<li>[mid] <strong>' + name + '</strong></li>';
+                });
+                midLateNames.forEach(function(name) {
+                    html += '<li>[mid or late] <strong>' + name + '</strong></li>';
+                });
+                midLateFlavoringNames.forEach(function(name) {
+                    html += '<li>[mid or late or flavoring] <strong>' + name + '</strong></li>';
+                });
+                lateNames.forEach(function(name) {
+                    html += '<li>[late] <strong>' + name + '</strong></li>';
+                });
+                lateFlavoringNames.forEach(function(name) {
+                    html += '<li>[late or flavoring] <strong>' + name + '</strong></li>';
+                });
+                flavoringNames.forEach(function(name) {
+                    html += '<li>[flavoring] <strong>' + name + '</strong></li>';
+                });
+            } else {
+                html += '<li>You haven\'t selected any ingredients! This won\'nt be much of a stir fry, will it?</li>'
+            }
 
-        var dressingHtml = '<li>Dressing</li><ul>';
-        if (dressingNames.length > 0) {
-            if (dressingOilNames.length > 0) {
-                dressingOilNames.forEach(function(name) {
-                    dressingHtml += '<li>(~1 tbs/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing oil. I suspect the salad would taste better if you go back and add one!</li>';
-            }
-            if (dressingVinegarNames.length > 0) {
-                dressingVinegarNames.forEach(function(name) {
-                    dressingHtml += '<li>(~.5 tbs/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing vinegar. Without vinegar, your salad will probably taste lopsided; you might want to go back and add one.</li>';
-            }
-            if (dressingSaltNames.length > 0) {
-                dressingSaltNames.forEach(function(name) {
-                    dressingHtml += '<li>(~a pinch/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a salt. This one\'s kinda optional, but I\'d strongly suggest you at least try adding salt to a salad or two.</li>';
-            }
-            if (dressingPepperNames.length > 0) {
-                dressingPepperNames.forEach(function(name) {
-                    dressingHtml += '<li>(~1/4 tsp/serving) ' + name + '</li>';
-                });
-            } else {
-                dressingHtml += '<li>You haven\'nt added a dressing pepper. Pepper isn\'t as crucial as some other ingredients, but I\'d strongly recommend at least trying it a few times.</li>';
-            }
+            $('#ingredients-list').html(html);
+            $('#about-window').hide();
+            $('#recipe-window').show();
         } else {
-            dressingHtml += '<li>You haven\'nt selected any dressing ingredients at all! I suspect your salad will be pretty dry without dressing...</li>';
+            $('#recipe-window').hide();
+            $('#ingredients-list').html('')
         }
-        dressingHtml += '</ul>';
-        $('#ingredients-list').html(leafyGreensHtml + extrasHtml + dressingHtml);
-        $('#about-window').hide();
-        $('#recipe-window').show();
     });
 
     $('#recipe-close').click(function() {
