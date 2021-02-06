@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from salad import salad_blueprint
-from stir_fry import stir_fry_blueprint
+from salad.salad import salad_blueprint
+from stir_fry.stir_fry import stir_fry_blueprint
 
 app = Flask(__name__)
 # app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
