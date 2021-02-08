@@ -19,10 +19,6 @@ app.register_blueprint(stir_fry.routes.blueprint)
 # app.register_blueprint(stir_fry.routes_generate.blueprint)
 # app.register_blueprint(stir_fry.routes_generate_black_magic.blueprint)
 
-print(salad.routes.blueprint.__dict__)
-print()
-print(stir_fry.routes.blueprint.__dict__)
-
 @app.route('/')
 def root():
     return redirect(url_for('stir_fry.index'))
